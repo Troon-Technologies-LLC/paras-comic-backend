@@ -301,6 +301,29 @@ const main = async () => {
 		}
 	)
 
+	server.delete(
+		'/comments/:commentId',
+		authenticate(near, 'testnet'),
+		async (req, res) => {
+			try {
+				const params = {
+					accountId: req.accountId,
+					commentId: req.params.commentId,
+				}
+				const result = await comment.delete(params)
+				return res.json({
+					status: 1,
+					data: result,
+				})
+			} catch (err) {
+				return res.status(400).json({
+					status: 0,
+					message: err.message,
+				})
+			}
+		}
+	)
+
 	server.listen(PORT, () => {
 		console.log(`Comic Paras: Backend running on PORT ${PORT}`)
 	})

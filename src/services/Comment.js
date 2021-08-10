@@ -200,6 +200,25 @@ class Comment {
 			throw err
 		}
 	}
+
+	async delete({ accountId, commentId }) {
+		const formatCommentId = ObjectId(commentId)
+
+		try {
+			const deletedComment = await this.commentDb.deleteOne({
+				_id: formatCommentId,
+				accountId: accountId,
+			})
+
+			if (deletedComment.deletedCount > 0) {
+				return true
+			} else {
+				throw new Error('Comment not found')
+			}
+		} catch (err) {
+			throw err
+		}
+	}
 }
 
 module.exports = Comment
