@@ -8,6 +8,7 @@ const axios = require('axios')
 const { providers, keyStores } = require('near-api-js')
 const authenticate = require('./middleware/authenticate')
 const Near = require('./helpers/Near')
+const Comment = require('./services/Comment')
 
 const PORT = process.env.PORT || 9090
 const server = express()
@@ -32,6 +33,8 @@ const main = async () => {
 
 	const near = new Near()
 	await near.init()
+
+	const comment = new Comment(database)
 
 	const getChapterDetails = async (chapterData, viewerId) => {
 		const data = chapterData
@@ -109,7 +112,7 @@ const main = async () => {
 
 			return res.json({
 				status: 1,
-				results: results,
+				data: results,
 			})
 		} catch (err) {
 			return res.status(400).json({
@@ -206,6 +209,97 @@ const main = async () => {
 			})
 		}
 	})
+
+	server.post('/comments', authenticate(near, 'testnet'), async (req, res) => {
+		try {
+			const params = {
+				accountId: req.accountId,
+				comicId: req.body.comicId,
+				chapterId: req.body.chapterId,
+				body: req.body.body,
+			}
+			const result = await comment.create(params)
+			return res.json({
+				status: 1,
+				data: result,
+			})
+		} catch (err) {
+			return res.status(400).json({
+				status: 0,
+				message: err.message,
+			})
+		}
+	})
+
+	server.get('/comments', async (req, res) => {
+		const accountId = await near.authSignature(
+			req.headers.authorization,
+			'testnet'
+		)
+		try {
+			const query = {
+				comicId: req.body.comicId,
+				chapterId: req.body.chapterId,
+				authAccountId: accountId,
+			}
+			const results = await comment.find(query)
+			return res.json({
+				status: 1,
+				data: results,
+			})
+		} catch (err) {
+			return res.status(400).json({
+				status: 0,
+				message: err.message,
+			})
+		}
+	})
+
+	server.put(
+		'/comments/likes',
+		authenticate(near, 'testnet'),
+		async (req, res) => {
+			try {
+				const params = {
+					accountId: req.accountId,
+					commentId: req.body.commentId,
+				}
+				const result = await comment.likes(params)
+				return res.json({
+					status: 1,
+					data: result,
+				})
+			} catch (err) {
+				return res.status(400).json({
+					status: 0,
+					message: err.message,
+				})
+			}
+		}
+	)
+
+	server.put(
+		'/comments/dislikes',
+		authenticate(near, 'testnet'),
+		async (req, res) => {
+			try {
+				const params = {
+					accountId: req.accountId,
+					commentId: req.body.commentId,
+				}
+				const result = await comment.dislikes(params)
+				return res.json({
+					status: 1,
+					data: result,
+				})
+			} catch (err) {
+				return res.status(400).json({
+					status: 0,
+					message: err.message,
+				})
+			}
+		}
+	)
 
 	server.listen(PORT, () => {
 		console.log(`Comic Paras: Backend running on PORT ${PORT}`)
