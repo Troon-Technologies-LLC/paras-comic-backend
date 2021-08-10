@@ -238,11 +238,18 @@ const main = async () => {
 		)
 		try {
 			const query = {
-				comicId: req.body.comicId,
-				chapterId: req.body.chapterId,
+				comicId: req.query.comicId,
+				chapterId: req.query.chapterId,
 				authAccountId: accountId,
 			}
-			const results = await comment.find(query)
+
+			const skip = req.query.__skip ? parseInt(req.query.__skip) : 0
+			const limit = req.query.__limit
+				? Math.min(parseInt(req.query.__limit), 10)
+				: 10
+
+			const results = await comment.find(query, skip, limit)
+
 			return res.json({
 				status: 1,
 				data: results,
@@ -288,6 +295,29 @@ const main = async () => {
 					commentId: req.body.commentId,
 				}
 				const result = await comment.dislikes(params)
+				return res.json({
+					status: 1,
+					data: result,
+				})
+			} catch (err) {
+				return res.status(400).json({
+					status: 0,
+					message: err.message,
+				})
+			}
+		}
+	)
+
+	server.delete(
+		'/comments/:commentId',
+		authenticate(near, 'testnet'),
+		async (req, res) => {
+			try {
+				const params = {
+					accountId: req.accountId,
+					commentId: req.params.commentId,
+				}
+				const result = await comment.delete(params)
 				return res.json({
 					status: 1,
 					data: result,
