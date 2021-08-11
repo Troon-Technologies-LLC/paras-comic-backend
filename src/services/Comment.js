@@ -91,7 +91,13 @@ class Comment {
 
 				aggregationMatches.push({
 					$addFields: {
-						userLikes: { $arrayElemAt: ['$myLikes.type', 0] },
+						userLikes: {
+							$cond: [
+								{ $eq: [{ $size: '$myLikes' }, 0] },
+								{ $literal: null },
+								{ $arrayElemAt: ['$myLikes.type', 0] },
+							],
+						},
 					},
 				})
 			}
