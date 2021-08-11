@@ -46,6 +46,12 @@ class Comment {
 				})
 			}
 
+			aggregationMatches.push({
+				$addFields: {
+					userLikes: null,
+				},
+			})
+
 			if (query.authAccountId) {
 				aggregationMatches.push({
 					$addFields: {
@@ -60,11 +66,40 @@ class Comment {
 						},
 					},
 				})
+
+				aggregationMatches.push({
+					$lookup: {
+						from: 'likes',
+						let: {
+							commentId: '$_id',
+						},
+						pipeline: [
+							{
+								$match: {
+									$expr: {
+										$and: [
+											{ $eq: ['$commentId', '$$commentId'] },
+											{ $eq: ['$accountId', query.authAccountId] },
+										],
+									},
+								},
+							},
+						],
+						as: 'myLikes',
+					},
+				})
+
+				aggregationMatches.push({
+					$addFields: {
+						userLikes: { $arrayElemAt: ['$myLikes.type', 0] },
+					},
+				})
 			}
 
 			const aggregationFull = aggregationMatches.concat([
 				{
 					$project: {
+						myLikes: 0,
 						order: 0,
 						score: 0,
 					},
@@ -85,6 +120,10 @@ class Comment {
 			])
 
 			const rawResults = await this.commentDb.aggregate(aggregationFull)
+
+			if (query.authAccountId) {
+				await this.likesDb.findOne({})
+			}
 
 			const results = await rawResults.toArray()
 			return results
