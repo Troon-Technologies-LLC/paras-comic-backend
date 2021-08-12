@@ -104,17 +104,17 @@ class Comment {
 
 			const aggregationFull = aggregationMatches.concat([
 				{
-					$project: {
-						myLikes: 0,
-						order: 0,
-						score: 0,
-					},
-				},
-				{
 					$sort: {
 						order: 1,
 						score: -1,
 						createdAt: -1,
+					},
+				},
+				{
+					$project: {
+						myLikes: 0,
+						order: 0,
+						score: 0,
 					},
 				},
 				{
