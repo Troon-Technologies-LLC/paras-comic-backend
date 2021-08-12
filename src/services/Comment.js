@@ -192,6 +192,37 @@ class Comment {
 		}
 	}
 
+	async unlikes({ accountId, commentId }) {
+		const formatCommentId = ObjectId(commentId)
+
+		try {
+			const deletedLike = await this.likesDb.deleteOne({
+				accountId: accountId,
+				commentId: formatCommentId,
+			})
+
+			// if like exist and type === 'like', return true
+			if (deletedLike.deletedCount > 0) {
+				let inc = {
+					likes: -1,
+					score: -1,
+				}
+				await this.commentDb.findOneAndUpdate(
+					{
+						_id: formatCommentId,
+					},
+					{
+						$inc: inc,
+					}
+				)
+			}
+
+			return true
+		} catch (err) {
+			throw err
+		}
+	}
+
 	async dislikes({ accountId, commentId }) {
 		const formatCommentId = ObjectId(commentId)
 
@@ -239,6 +270,37 @@ class Comment {
 					$inc: inc,
 				}
 			)
+
+			return true
+		} catch (err) {
+			throw err
+		}
+	}
+
+	async undislikes({ accountId, commentId }) {
+		const formatCommentId = ObjectId(commentId)
+
+		try {
+			const deletedLike = await this.likesDb.deleteOne({
+				accountId: accountId,
+				commentId: formatCommentId,
+			})
+
+			// if like exist and type === 'like', return true
+			if (deletedLike.deletedCount > 0) {
+				let inc = {
+					dislikes: -1,
+					score: 1,
+				}
+				await this.commentDb.findOneAndUpdate(
+					{
+						_id: formatCommentId,
+					},
+					{
+						$inc: inc,
+					}
+				)
+			}
 
 			return true
 		} catch (err) {
