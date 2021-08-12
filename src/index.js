@@ -286,6 +286,29 @@ const main = async () => {
 	)
 
 	server.put(
+		'/comments/unlikes',
+		authenticate(near, 'testnet'),
+		async (req, res) => {
+			try {
+				const params = {
+					accountId: req.accountId,
+					commentId: req.body.commentId,
+				}
+				const result = await comment.unlikes(params)
+				return res.json({
+					status: 1,
+					data: result,
+				})
+			} catch (err) {
+				return res.status(400).json({
+					status: 0,
+					message: err.message,
+				})
+			}
+		}
+	)
+
+	server.put(
 		'/comments/dislikes',
 		authenticate(near, 'testnet'),
 		async (req, res) => {
@@ -295,6 +318,29 @@ const main = async () => {
 					commentId: req.body.commentId,
 				}
 				const result = await comment.dislikes(params)
+				return res.json({
+					status: 1,
+					data: result,
+				})
+			} catch (err) {
+				return res.status(400).json({
+					status: 0,
+					message: err.message,
+				})
+			}
+		}
+	)
+
+	server.put(
+		'/comments/undislikes',
+		authenticate(near, 'testnet'),
+		async (req, res) => {
+			try {
+				const params = {
+					accountId: req.accountId,
+					commentId: req.body.commentId,
+				}
+				const result = await comment.undislikes(params)
 				return res.json({
 					status: 1,
 					data: result,
