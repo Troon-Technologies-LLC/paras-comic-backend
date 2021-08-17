@@ -9,6 +9,7 @@ const { providers, keyStores } = require('near-api-js')
 const authenticate = require('./middleware/authenticate')
 const Near = require('./helpers/Near')
 const Comment = require('./services/Comment')
+const Comic = require('./services/Comic')
 
 const PORT = process.env.PORT || 9090
 const server = express()
@@ -34,6 +35,7 @@ const main = async () => {
 	const near = new Near()
 	await near.init()
 
+	const comic = new Comic(database)
 	const comment = new Comment(database)
 
 	const getChapterDetails = async (chapterData, viewerId) => {
@@ -90,6 +92,31 @@ const main = async () => {
 		res.json({
 			status: 1,
 		})
+	})
+
+	server.get('/comics', async (req, res) => {
+		try {
+			const query = {
+				comic_id: req.query.comic_id,
+			}
+
+			const skip = req.query.__skip ? parseInt(req.query.__skip) : 0
+			const limit = req.query.__limit
+				? Math.min(parseInt(req.query.__limit), 10)
+				: 10
+
+			const results = await comic.find(query, skip, limit)
+
+			return res.json({
+				status: 1,
+				data: results,
+			})
+		} catch (err) {
+			return res.status(400).json({
+				status: 0,
+				message: err.message,
+			})
+		}
 	})
 
 	server.get('/chapters', async (req, res) => {
