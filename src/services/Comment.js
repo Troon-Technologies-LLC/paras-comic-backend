@@ -107,7 +107,7 @@ class Comment {
 					$sort: {
 						order: 1,
 						score: -1,
-						createdAt: -1,
+						issued_at: -1,
 					},
 				},
 				{
