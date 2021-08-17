@@ -214,8 +214,8 @@ const main = async () => {
 		try {
 			const params = {
 				accountId: req.accountId,
-				comicId: req.body.comicId,
-				chapterId: req.body.chapterId,
+				comicId: req.body.comic_id,
+				chapterId: req.body.chapter_id,
 				body: req.body.body,
 			}
 			const result = await comment.create(params)

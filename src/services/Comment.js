@@ -9,14 +9,14 @@ class Comment {
 	async create({ comicId, chapterId, accountId, body }) {
 		try {
 			const newData = {
-				comicId: comicId,
-				chapterId: chapterId,
-				accountId: accountId,
+				comic_id: comicId,
+				chapter_id: chapterId,
+				account_id: accountId,
 				body: body,
 				likes: 0,
 				dislikes: 0,
 				score: 0,
-				createdAt: new Date().getTime(),
+				issued_at: new Date().toISOString(),
 			}
 			await this.commentDb.insertOne(newData)
 
