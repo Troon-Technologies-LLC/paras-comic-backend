@@ -33,7 +33,7 @@ class Comment {
 			if (query.comicId) {
 				aggregationMatches.push({
 					$match: {
-						comicId: query.comicId,
+						comic_id: query.comicId,
 					},
 				})
 			}
@@ -41,14 +41,14 @@ class Comment {
 			if (query.chapterId) {
 				aggregationMatches.push({
 					$match: {
-						chapterId: query.chapterId,
+						chapter_id: query.chapterId,
 					},
 				})
 			}
 
 			aggregationMatches.push({
 				$addFields: {
-					userLikes: null,
+					user_likes: null,
 				},
 			})
 
@@ -58,7 +58,7 @@ class Comment {
 						order: {
 							$cond: [
 								{
-									$eq: ['$accountId', query.authAccountId],
+									$eq: ['$account_id', query.authAccountId],
 								},
 								0,
 								1,
@@ -71,31 +71,31 @@ class Comment {
 					$lookup: {
 						from: 'likes',
 						let: {
-							commentId: '$_id',
+							comment_id: '$_id',
 						},
 						pipeline: [
 							{
 								$match: {
 									$expr: {
 										$and: [
-											{ $eq: ['$commentId', '$$commentId'] },
-											{ $eq: ['$accountId', query.authAccountId] },
+											{ $eq: ['$comment_id', '$$comment_id'] },
+											{ $eq: ['$account_id', query.authAccountId] },
 										],
 									},
 								},
 							},
 						],
-						as: 'myLikes',
+						as: 'my_likes',
 					},
 				})
 
 				aggregationMatches.push({
 					$addFields: {
-						userLikes: {
+						user_likes: {
 							$cond: [
-								{ $eq: [{ $size: '$myLikes' }, 0] },
+								{ $eq: [{ $size: '$my_likes' }, 0] },
 								{ $literal: null },
-								{ $arrayElemAt: ['$myLikes.type', 0] },
+								{ $arrayElemAt: ['$my_likes.type', 0] },
 							],
 						},
 					},
@@ -112,7 +112,7 @@ class Comment {
 				},
 				{
 					$project: {
-						myLikes: 0,
+						my_likes: 0,
 						order: 0,
 						score: 0,
 					},
@@ -127,10 +127,6 @@ class Comment {
 
 			const rawResults = await this.commentDb.aggregate(aggregationFull)
 
-			if (query.authAccountId) {
-				await this.likesDb.findOne({})
-			}
-
 			const results = await rawResults.toArray()
 			return results
 		} catch (err) {
@@ -143,8 +139,8 @@ class Comment {
 
 		try {
 			const likeExist = await this.likesDb.findOne({
-				accountId: accountId,
-				commentId: formatCommentId,
+				account_id: accountId,
+				comment_id: formatCommentId,
 			})
 
 			// if like exist and type === 'like', return true
@@ -155,15 +151,15 @@ class Comment {
 			// add new like
 			await this.likesDb.findOneAndUpdate(
 				{
-					accountId: accountId,
-					commentId: formatCommentId,
+					account_id: accountId,
+					comment_id: formatCommentId,
 				},
 				{
 					$set: {
 						type: 'likes',
-						updatedAt: new Date().getTime(),
+						updated_at: new Date().getTime(),
 					},
-					$setOnInsert: { createdAt: new Date().getTime() },
+					$setOnInsert: { issued_at: new Date().getTime() },
 				},
 				{
 					upsert: true,
@@ -197,8 +193,8 @@ class Comment {
 
 		try {
 			const deletedLike = await this.likesDb.deleteOne({
-				accountId: accountId,
-				commentId: formatCommentId,
+				account_id: accountId,
+				comment_id: formatCommentId,
 			})
 
 			// if like exist and type === 'like', return true
@@ -228,8 +224,8 @@ class Comment {
 
 		try {
 			const likeExist = await this.likesDb.findOne({
-				accountId: accountId,
-				commentId: formatCommentId,
+				account_id: accountId,
+				comment_id: formatCommentId,
 			})
 
 			// if like exist and type === 'dislike', return true
@@ -240,15 +236,15 @@ class Comment {
 			// add new like
 			await this.likesDb.findOneAndUpdate(
 				{
-					accountId: accountId,
-					commentId: formatCommentId,
+					account_id: accountId,
+					comment_id: formatCommentId,
 				},
 				{
 					$set: {
 						type: 'dislikes',
-						updatedAt: new Date().getTime(),
+						updated_at: new Date().getTime(),
 					},
-					$setOnInsert: { createdAt: new Date().getTime() },
+					$setOnInsert: { issued_at: new Date().getTime() },
 				},
 				{
 					upsert: true,
@@ -282,8 +278,8 @@ class Comment {
 
 		try {
 			const deletedLike = await this.likesDb.deleteOne({
-				accountId: accountId,
-				commentId: formatCommentId,
+				account_id: accountId,
+				comment_id: formatCommentId,
 			})
 
 			// if like exist and type === 'like', return true
@@ -314,7 +310,7 @@ class Comment {
 		try {
 			const deletedComment = await this.commentDb.deleteOne({
 				_id: formatCommentId,
-				accountId: accountId,
+				account_id: accountId,
 			})
 
 			if (deletedComment.deletedCount > 0) {
