@@ -241,8 +241,8 @@ const main = async () => {
 		try {
 			const params = {
 				accountId: req.accountId,
-				comicId: req.body.comicId,
-				chapterId: req.body.chapterId,
+				comicId: req.body.comic_id,
+				chapterId: req.body.chapter_id,
 				body: req.body.body,
 			}
 			const result = await comment.create(params)
@@ -265,8 +265,8 @@ const main = async () => {
 		)
 		try {
 			const query = {
-				comicId: req.query.comicId,
-				chapterId: req.query.chapterId,
+				comicId: req.query.comic_id,
+				chapterId: req.query.chapter_id,
 				authAccountId: accountId,
 			}
 
@@ -294,9 +294,10 @@ const main = async () => {
 		authenticate(near, 'testnet'),
 		async (req, res) => {
 			try {
+				const accountId = req.accountId
 				const params = {
-					accountId: req.accountId,
-					commentId: req.body.commentId,
+					accountId: accountId,
+					commentId: req.body.comment_id,
 				}
 				const result = await comment.likes(params)
 				return res.json({
@@ -317,9 +318,10 @@ const main = async () => {
 		authenticate(near, 'testnet'),
 		async (req, res) => {
 			try {
+				const accountId = req.accountId
 				const params = {
-					accountId: req.accountId,
-					commentId: req.body.commentId,
+					accountId: accountId,
+					commentId: req.body.comment_id,
 				}
 				const result = await comment.unlikes(params)
 				return res.json({
@@ -340,9 +342,10 @@ const main = async () => {
 		authenticate(near, 'testnet'),
 		async (req, res) => {
 			try {
+				const accountId = req.accountId
 				const params = {
-					accountId: req.accountId,
-					commentId: req.body.commentId,
+					accountId: accountId,
+					commentId: req.body.comment_id,
 				}
 				const result = await comment.dislikes(params)
 				return res.json({
@@ -363,9 +366,10 @@ const main = async () => {
 		authenticate(near, 'testnet'),
 		async (req, res) => {
 			try {
+				const accountId = req.accountId
 				const params = {
-					accountId: req.accountId,
-					commentId: req.body.commentId,
+					accountId: accountId,
+					commentId: req.body.comment_id,
 				}
 				const result = await comment.undislikes(params)
 				return res.json({
@@ -386,9 +390,10 @@ const main = async () => {
 		authenticate(near, 'testnet'),
 		async (req, res) => {
 			try {
+				const accountId = req.accountId
 				const params = {
-					accountId: req.accountId,
-					commentId: req.params.commentId,
+					accountId: accountId,
+					commentId: req.body.comment_id,
 				}
 				const result = await comment.delete(params)
 				return res.json({
