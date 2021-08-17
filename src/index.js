@@ -393,7 +393,7 @@ const main = async () => {
 				const accountId = req.accountId
 				const params = {
 					accountId: accountId,
-					commentId: req.body.comment_id,
+					commentId: req.params.commentId,
 				}
 				const result = await comment.delete(params)
 				return res.json({
