@@ -4,10 +4,10 @@ const cacheManager = require('cache-manager')
 class Database {
 	constructor() {
 		this.ready = null
-		this.client = new MongoClient(
-			`${process.env.MONGO_URL}?retryWrites=true&w=majority`,
-			{ useNewUrlParser: true, useUnifiedTopology: true }
-		)
+		this.client = new MongoClient(`${process.env.MONGO_URL}`, {
+			useNewUrlParser: true,
+			useUnifiedTopology: true,
+		})
 		this._cacheManager = {}
 	}
 

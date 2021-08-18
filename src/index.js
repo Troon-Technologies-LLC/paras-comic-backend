@@ -10,6 +10,7 @@ const authenticate = require('./middleware/authenticate')
 const Near = require('./helpers/Near')
 const Comment = require('./services/Comment')
 const Comic = require('./services/Comic')
+const Chapter = require('./services/Chapter')
 
 const PORT = process.env.PORT || 9090
 const server = express()
@@ -37,56 +38,7 @@ const main = async () => {
 
 	const comic = new Comic(database)
 	const comment = new Comment(database)
-
-	const getChapterDetails = async (chapterData, viewerId) => {
-		const data = chapterData
-		let result = data
-		result.isRead = false
-		if (viewerId) {
-			for await (const requirement of data.requirements) {
-				const [networkId, contractId, tokenId, quantity] =
-					requirement.split('::')
-				const args = JSON.stringify({
-					ownerId: viewerId,
-					tokenId: tokenId,
-				})
-				const rawResult = await near.providers[networkId].query({
-					request_type: 'call_function',
-					account_id: contractId,
-					method_name: 'balanceOf',
-					args_base64: Buffer.from(args).toString('base64'),
-					finality: 'optimistic',
-				})
-				const owned = JSON.parse(Buffer.from(rawResult.result).toString())
-
-				if (owned >= quantity) {
-					result.status = 'read'
-					return result
-				}
-			}
-		}
-
-		result.status = 'sold_out'
-		const [networkId, contractId, tokenId, _] =
-			result.requirements[result.requirements.length - 1].split('::')
-		const args = JSON.stringify({
-			ownerId: result.authorId,
-			tokenId: tokenId,
-		})
-		const rawResult = await near.providers[networkId].query({
-			request_type: 'call_function',
-			account_id: contractId,
-			method_name: 'getMarketData',
-			args_base64: Buffer.from(args).toString('base64'),
-			finality: 'optimistic',
-		})
-		const officialMarket = JSON.parse(Buffer.from(rawResult.result).toString())
-		if (officialMarket) {
-			result.status = `price_${officialMarket.price}`
-		}
-
-		return result
-	}
+	const chapter = new Chapter(database)
 
 	server.get('/', async (req, res) => {
 		res.json({
@@ -120,22 +72,17 @@ const main = async () => {
 	})
 
 	server.get('/chapters', async (req, res) => {
-		const { comicId, authorId } = req.query
+		const { comic_id, chapter_id } = req.query
 		const accountId = await near.authSignature(
 			req.headers.authorization,
 			'testnet'
 		)
 		try {
-			const rawData = await database.root.collection('chapters').find({
-				comicId: comicId,
-				authorId: authorId,
+			const results = await chapter.find({
+				comicId: comic_id,
+				chapterId: chapter_id,
+				authAccountId: 'comic.test.near',
 			})
-			const data = await rawData.toArray()
-			const results = []
-			for (const chapterData of data) {
-				const chapterDetails = await getChapterDetails(chapterData, accountId)
-				results.push(chapterDetails)
-			}
 
 			return res.json({
 				status: 1,
