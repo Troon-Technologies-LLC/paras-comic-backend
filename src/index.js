@@ -11,6 +11,7 @@ const Near = require('./helpers/Near')
 const Comment = require('./services/Comment')
 const Comic = require('./services/Comic')
 const Chapter = require('./services/Chapter')
+const Page = require('./services/Page')
 
 const PORT = process.env.PORT || 9090
 const server = express()
@@ -39,6 +40,7 @@ const main = async () => {
 	const comic = new Comic(database)
 	const comment = new Comment(database)
 	const chapter = new Chapter(database)
+	const page = new Page(database)
 
 	server.get('/', async (req, res) => {
 		res.json({
@@ -96,93 +98,33 @@ const main = async () => {
 		}
 	})
 
-	server.get('/unlockables/:id', authenticate(near), async (req, res) => {
-		// const [titleId, authorId, chapterId, pageId] = req.params.id.split('::')
-		const accountId = req.accountId
-		try {
-			const rawData = await database.root.collection('unlockables').find({
-				id: req.params.id,
-			})
-			const data = await rawData.toArray()
-			if (data.length === 0) {
-				throw new Error('not found')
+	server.get(
+		'/pages/:comic_id/:chapter_id/:page_id',
+		authenticate(near),
+		async (req, res) => {
+			const accountId = req.accountId
+			try {
+				const content = await page.getContent({
+					comicId: req.params.comic_id,
+					chapterId: req.params.chapter_id,
+					pageId: req.params.page_id,
+					authAccountId: 'riqi.test.near',
+				})
+				return axios({
+					method: 'get',
+					url: content,
+					responseType: 'stream',
+				}).then(function (response) {
+					response.data.pipe(res)
+				})
+			} catch (err) {
+				return res.status(400).json({
+					status: 0,
+					message: err.message,
+				})
 			}
-			// const requirements = data.map(d => {
-			//   return d.requirements
-			// })
-			// requirements
-
-			// for await (const requirement of requirements) {
-			//   const [networkId, contractId, tokenId, quantity] = requirement.split('::')
-			//   const args = JSON.stringify({
-			//     ownerId: accountId,
-			//     tokenId: tokenId
-			//   })
-			//   const rawResult = await near.providers[networkId].query({
-			//     request_type: "call_function",
-			//     account_id: contractId,
-			//     method_name: "balanceOf",
-			//     args_base64: Buffer.from(args).toString('base64'),
-			//     finality: "optimistic",
-			//   })
-			//   const owned = JSON.parse(Buffer.from(rawResult.result).toString());
-
-			//   if (owned >= quantity) {
-			//     return axios({
-			//       method: 'get',
-			//       url: unlockable.content,
-			//       responseType: 'stream'
-			//     })
-			//       .then(function(response) {
-			//         response.data.pipe(res)
-			//     })
-			//   }
-			// }
-			for await (const unlockable of data) {
-				let result = []
-				for await (const requirement of unlockable.requirements) {
-					const [networkId, contractId, tokenId, quantity] =
-						requirement.split('::')
-					const args = JSON.stringify({
-						ownerId: accountId,
-						tokenId: tokenId,
-					})
-					const rawResult = await near.providers[networkId].query({
-						request_type: 'call_function',
-						account_id: contractId,
-						method_name: 'balanceOf',
-						args_base64: Buffer.from(args).toString('base64'),
-						finality: 'optimistic',
-					})
-					const owned = JSON.parse(Buffer.from(rawResult.result).toString())
-
-					if (owned >= quantity) {
-						result.push(true)
-					} else {
-						result.push(false)
-					}
-				}
-				if (result.every((v) => v === true)) {
-					return axios({
-						method: 'get',
-						url: unlockable.content,
-						responseType: 'stream',
-					}).then(function (response) {
-						response.data.pipe(res)
-					})
-				}
-			}
-			return res.status(400).json({
-				status: 0,
-				message: 'unauthorized',
-			})
-		} catch (err) {
-			return res.status(400).json({
-				status: 0,
-				message: err.message,
-			})
 		}
-	})
+	)
 
 	server.post('/comments', authenticate(near, 'testnet'), async (req, res) => {
 		try {

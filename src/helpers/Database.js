@@ -15,10 +15,10 @@ class Database {
 		try {
 			await this.client.connect()
 			this.root = this.client.db(process.env.DB_NAME)
-			var memoryCache = cacheManager.caching({
+			const memoryCache = cacheManager.caching({
 				store: 'memory',
 				max: 500,
-				ttl: 5 * 60,
+				ttl: 30,
 			})
 			this.cache = memoryCache
 			if (process.env.NODE_ENV === 'development') {
