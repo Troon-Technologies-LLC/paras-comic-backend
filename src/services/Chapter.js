@@ -1,97 +1,17 @@
-class Chapter {
-	constructor(database) {
-		this.chapterDb = database.root.collection('chapters')
+const { chapterCreate } = require('../utils/validator')
+const { encodeImageToBlurhash } = require('../utils/common')
+
+class ChapterSvc {
+	constructor({ chapterCtl, comicCtl, pageCtl }) {
+		this.chapterCtl = chapterCtl
+		this.comicCtl = comicCtl
+		this.pageCtl = pageCtl
 	}
 
 	async find(query = {}, skip = 0, limit = 10) {
 		try {
-			const aggregationMatches = []
+			const results = await this.chapterCtl.find(query, skip, limit)
 
-			if (query.comicId) {
-				aggregationMatches.push({
-					$match: {
-						comic_id: query.comicId,
-					},
-				})
-			}
-
-			if (query.chapterId) {
-				aggregationMatches.push({
-					$match: {
-						chapter_id: query.chapterId,
-					},
-				})
-			}
-
-			aggregationMatches.push({
-				$addFields: {
-					status: null,
-				},
-			})
-
-			if (query.authAccountId) {
-				aggregationMatches.push({
-					$lookup: {
-						from: 'access',
-						let: {
-							account_id: '$account_id',
-							comic_id: '$comic_id',
-							chapter_id: '$chapter_id',
-						},
-						pipeline: [
-							{
-								$match: {
-									$expr: {
-										$and: [
-											{ $eq: ['$account_id', query.authAccountId] },
-											{ $eq: ['$comic_id', '$$comic_id'] },
-											{ $eq: ['$chapter_id', '$$chapter_id'] },
-										],
-									},
-								},
-							},
-						],
-						as: 'my_access',
-					},
-				})
-				aggregationMatches.push({
-					$addFields: {
-						status: {
-							$cond: {
-								if: {
-									$gt: [{ $size: '$my_access' }, 0],
-								},
-								then: 'read',
-								else: 'buy',
-							},
-						},
-					},
-				})
-			}
-
-			const aggregationFull = aggregationMatches.concat([
-				{
-					$project: {
-						_id: 0,
-						my_access: 0,
-					},
-				},
-				{
-					$sort: {
-						chapter_id: -1,
-					},
-				},
-				{
-					$skip: skip,
-				},
-				{
-					$limit: limit,
-				},
-			])
-
-			const rawResults = await this.chapterDb.aggregate(aggregationFull)
-
-			const results = await rawResults.toArray()
 			return {
 				results: results,
 				skip: skip,
@@ -101,6 +21,56 @@ class Chapter {
 			throw err
 		}
 	}
+
+	async create(input, files) {
+		try {
+			await chapterCreate.validate(input, {
+				abortEarly: true,
+			})
+
+			const comicId = input.comic_id
+			const getComics = await this.comicCtl.find({
+				comicId: comicId,
+			})
+			if (getComics.length === 0) {
+				throw new Error('Comic not found')
+			}
+			const chapterId = parseInt(input.chapter_id)
+			const getChapters = await this.chapterCtl.find({
+				comicId: comicId,
+				chapterId: chapterId,
+			})
+			if (getChapters.length > 0) {
+				throw new Error('Chapter already exists')
+			}
+			const tokenType = `${comicId}-${chapterId}`
+			const price = input.price
+			const title = `${getComics[0].title} Ch.${chapterId} : ${input.subtitle}`
+			const coverFile = files.pop()
+
+			// create chapter pages
+			await this.pageCtl.createBulk({
+				comicId,
+				chapterId,
+				contentList: files,
+			})
+
+			return await this.chapterCtl.create({
+				tokenType: tokenType,
+				title: title,
+				price: price,
+				coverFile: coverFile,
+				blurhash: await encodeImageToBlurhash(coverFile.path),
+				description: input.description,
+				authorIds: input.author_ids,
+				pageCount: files.length,
+				collection: input.collection,
+				subtitle: input.subtitle,
+			})
+		} catch (err) {
+			throw err
+		}
+	}
 }
 
-module.exports = Chapter
+module.exports = ChapterSvc

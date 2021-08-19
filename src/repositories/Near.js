@@ -1,8 +1,10 @@
-const { providers } = require('near-api-js')
+const nearAPI = require('near-api-js')
 const nacl = require('tweetnacl')
 const bs58 = require('bs58')
 const sha256 = require('js-sha256')
 const axios = require('axios')
+const getConfig = require('../configs/near')
+const { utils } = require('near-api-js')
 
 const _hexToArr = (str) => {
 	try {
@@ -20,14 +22,21 @@ const MAINNET_RPC = 'https://rpc.mainnet.near.org'
 class Near {
 	constructor() {
 		this.ctx = null
-		this.config = null
-    this.providers = {
-      testnet: new providers.JsonRpcProvider(TESTNET_RPC),
-      mainnet: new providers.JsonRpcProvider(MAINNET_RPC),
-    }
+		this.config = getConfig('testnet')
 	}
 
 	async init() {
+		this.keyStore = new nearAPI.keyStores.UnencryptedFileSystemKeyStore(
+			`${process.env.HOME}/.near-credentials/`
+		)
+		const near = await nearAPI.connect({
+			deps: {
+				keyStore: this.keyStore,
+			},
+			...this.config,
+		})
+		this._ = near
+		this.DEFAULT_GAS = nearAPI.DEFAULT_FUNCTION_CALL_GAS
 	}
 
 	async authSignature(authHeader, networkId = 'testnet') {
@@ -62,6 +71,31 @@ class Near {
 		} catch (err) {
 			return null
 		}
+	}
+
+	async functionCall(
+		accountId,
+		contract,
+		method,
+		params,
+		gas = '50000000000000',
+		deposit
+	) {
+		const account = await this._.account(accountId)
+		console.log(account)
+		const result = await account.functionCall({
+			contractId: contract,
+			methodName: method,
+			args: params,
+			gas: gas,
+			attachedDeposit: utils.format.parseNearAmount(deposit),
+		})
+		console.log(result)
+
+		// const x = await this._.account(accountId).requestSignTransactions([
+		// 	transaction,
+		// ])
+		// console.log(x)
 	}
 }
 

@@ -1,17 +1,25 @@
 const express = require('express')
 const cors = require('cors')
 const bodyParser = require('body-parser')
-// const slowDown = require('express-slow-down')
-const Database = require('./helpers/Database')
 const axios = require('axios')
-// const ParasSDK = require('paras-sdk')
-const { providers, keyStores } = require('near-api-js')
+// const slowDown = require('express-slow-down')
+
+const Database = require('./repositories/Database')
+const Storage = require('./repositories/Storage')
+const Near = require('./repositories/Near')
+
+const CommentCtl = require('./controllers/Comment')
+const ComicCtl = require('./controllers/Comic')
+const ChapterCtl = require('./controllers/Chapter')
+const PageCtl = require('./controllers/Page')
+const LikeCtl = require('./controllers/Like')
+
 const authenticate = require('./middleware/authenticate')
-const Near = require('./helpers/Near')
-const Comment = require('./services/Comment')
-const Comic = require('./services/Comic')
-const Chapter = require('./services/Chapter')
-const Page = require('./services/Page')
+const multer = require('./middleware/multer')
+const ComicSvc = require('./services/Comic')
+const CommentSvc = require('./services/Comment')
+const ChapterSvc = require('./services/Chapter')
+const PageSvc = require('./services/Page')
 
 const PORT = process.env.PORT || 9090
 const server = express()
@@ -34,13 +42,22 @@ const main = async () => {
 	const database = new Database()
 	await database.init()
 
+	const storage = new Storage(database)
+	await storage.init()
+
 	const near = new Near()
 	await near.init()
 
-	const comic = new Comic(database)
-	const comment = new Comment(database)
-	const chapter = new Chapter(database)
-	const page = new Page(database)
+	const comicCtl = new ComicCtl({ database })
+	const commentCtl = new CommentCtl({ database })
+	const likeCtl = new LikeCtl({ database })
+	const chapterCtl = new ChapterCtl({ database, storage, near })
+	const pageCtl = new PageCtl({ database, storage })
+
+	const comicSvc = new ComicSvc({ comicCtl })
+	const commentSvc = new CommentSvc({ commentCtl, likeCtl })
+	const chapterSvc = new ChapterSvc({ chapterCtl, comicCtl, pageCtl })
+	const pageSvc = new PageSvc({ pageCtl })
 
 	server.get('/', async (req, res) => {
 		res.json({
@@ -59,7 +76,7 @@ const main = async () => {
 				? Math.min(parseInt(req.query.__limit), 10)
 				: 10
 
-			const results = await comic.find(query, skip, limit)
+			const results = await comicSvc.find(query, skip, limit)
 
 			return res.json({
 				status: 1,
@@ -80,10 +97,10 @@ const main = async () => {
 			'testnet'
 		)
 		try {
-			const results = await chapter.find({
+			const results = await chapterSvc.find({
 				comicId: comic_id,
 				chapterId: chapter_id,
-				authAccountId: 'comic.test.near',
+				authAccountId: 'comicSvc.test.near',
 			})
 
 			return res.json({
@@ -104,7 +121,7 @@ const main = async () => {
 		async (req, res) => {
 			const accountId = req.accountId
 			try {
-				const content = await page.getContent({
+				const content = await pageSvc.getContent({
 					comicId: req.params.comic_id,
 					chapterId: req.params.chapter_id,
 					pageId: req.params.page_id,
@@ -126,6 +143,25 @@ const main = async () => {
 		}
 	)
 
+	server.post('/chapters', authenticate(near, 'testnet'), async (req, res) => {
+		try {
+			await multer.bulk(req, res)
+
+			const result = await chapterSvc.create(req.body, req.files)
+
+			res.json({
+				status: 1,
+				data: result,
+			})
+		} catch (err) {
+			console.log(err)
+			res.status(400).json({
+				status: 0,
+				message: err.message || err,
+			})
+		}
+	})
+
 	server.post('/comments', authenticate(near, 'testnet'), async (req, res) => {
 		try {
 			const params = {
@@ -134,7 +170,7 @@ const main = async () => {
 				chapterId: req.body.chapter_id,
 				body: req.body.body,
 			}
-			const result = await comment.create(params)
+			const result = await commentSvc.create(params)
 			return res.json({
 				status: 1,
 				data: result,
@@ -164,7 +200,7 @@ const main = async () => {
 				? Math.min(parseInt(req.query.__limit), 10)
 				: 10
 
-			const results = await comment.find(query, skip, limit)
+			const results = await commentSvc.find(query, skip, limit)
 
 			return res.json({
 				status: 1,
@@ -188,7 +224,7 @@ const main = async () => {
 					accountId: accountId,
 					commentId: req.body.comment_id,
 				}
-				const result = await comment.likes(params)
+				const result = await commentSvc.likes(params)
 				return res.json({
 					status: 1,
 					data: result,
@@ -212,7 +248,7 @@ const main = async () => {
 					accountId: accountId,
 					commentId: req.body.comment_id,
 				}
-				const result = await comment.unlikes(params)
+				const result = await commentSvc.unlikes(params)
 				return res.json({
 					status: 1,
 					data: result,
@@ -236,7 +272,7 @@ const main = async () => {
 					accountId: accountId,
 					commentId: req.body.comment_id,
 				}
-				const result = await comment.dislikes(params)
+				const result = await commentSvc.dislikes(params)
 				return res.json({
 					status: 1,
 					data: result,
@@ -260,7 +296,7 @@ const main = async () => {
 					accountId: accountId,
 					commentId: req.body.comment_id,
 				}
-				const result = await comment.undislikes(params)
+				const result = await commentSvc.undislikes(params)
 				return res.json({
 					status: 1,
 					data: result,
@@ -284,7 +320,7 @@ const main = async () => {
 					accountId: accountId,
 					commentId: req.params.commentId,
 				}
-				const result = await comment.delete(params)
+				const result = await commentSvc.delete(params)
 				return res.json({
 					status: 1,
 					data: result,
