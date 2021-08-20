@@ -1,9 +1,9 @@
-const { ObjectId } = require('mongodb')
-
 class CommentSvc {
-	constructor({ commentCtl, likeCtl }) {
+	constructor({ commentCtl, likeCtl }, { dbSession }) {
 		this.commentCtl = commentCtl
 		this.likeCtl = likeCtl
+		this.dbSession = dbSession
+		this.inTx = false
 	}
 
 	async create({ comicId, chapterId, accountId, body }) {
@@ -34,47 +34,170 @@ class CommentSvc {
 
 	async likes({ accountId, commentId }) {
 		try {
-			await this.likeCtl.likes({ accountId, commentId })
+			const currLike = await this.likeCtl.findOne({
+				account_id: accountId,
+				comment_id: commentId,
+			})
+
+			if (currLike && currLike.type === 'likes') {
+				return true
+			}
+
+			await this.dbSession.startTransaction()
+			this.inTx = true
+
+			await this.likeCtl.likes(
+				{ accountId, commentId },
+				{ dbSession: this.dbSession }
+			)
+
+			let score = {
+				likes: 1,
+				score: 1,
+			}
+
+			if (currLike && currLike.type === 'dislikes') {
+				score.dislikes = -1
+			}
+
+			await this.commentCtl.updateScore(
+				{ commentId, score },
+				{ dbSession: this.dbSession }
+			)
+
+			await this.dbSession.commitTransaction()
 
 			return true
 		} catch (err) {
+			if (this.inTx) {
+				await this.dbSession.abortTransaction()
+			}
 			throw err
 		}
 	}
 
 	async unlikes({ accountId, commentId }) {
 		try {
-			await this.likeCtl.unlikes({ accountId, commentId })
+			await this.dbSession.startTransaction()
+			this.inTx = true
+
+			const deletedLike = await this.likeCtl.findOneAndDelete(
+				{ accountId, commentId },
+				{ dbSession: this.dbSession }
+			)
+
+			if (deletedLike) {
+				let score = {
+					likes: -1,
+					score: -1,
+				}
+
+				await this.commentCtl.updateScore(
+					{ commentId, score },
+					{ dbSession: this.dbSession }
+				)
+			}
+
+			await this.dbSession.commitTransaction()
 
 			return true
 		} catch (err) {
+			if (this.inTx) {
+				await this.dbSession.abortTransaction()
+			}
 			throw err
 		}
 	}
 
 	async dislikes({ accountId, commentId }) {
 		try {
-			await this.likeCtl.dislikes({ accountId, commentId })
+			const currLike = await this.likeCtl.findOne({
+				account_id: accountId,
+				comment_id: commentId,
+			})
+
+			if (currLike && currLike.type === 'dislikes') {
+				return true
+			}
+
+			await this.dbSession.startTransaction()
+			this.inTx = true
+
+			await this.likeCtl.dislikes(
+				{ accountId, commentId },
+				{ dbSession: this.dbSession }
+			)
+
+			let score = {
+				dislikes: 1,
+				score: -1,
+			}
+
+			if (currLike && currLike.type === 'likes') {
+				score.likes = -1
+			}
+
+			await this.commentCtl.updateScore(
+				{ commentId, score },
+				{ dbSession: this.dbSession }
+			)
+
+			await this.dbSession.commitTransaction()
 
 			return true
 		} catch (err) {
+			if (this.inTx) {
+				await this.dbSession.abortTransaction()
+			}
 			throw err
 		}
 	}
 
 	async undislikes({ accountId, commentId }) {
 		try {
-			await this.likeCtl.undislikes({ accountId, commentId })
+			await this.dbSession.startTransaction()
+			this.inTx = true
+
+			const deletedLike = await this.likeCtl.findOneAndDelete(
+				{ accountId, commentId },
+				{ dbSession: this.dbSession }
+			)
+
+			if (deletedLike) {
+				let score = {
+					dislikes: -1,
+					score: 1,
+				}
+
+				await this.commentCtl.updateScore(
+					{ commentId, score },
+					{ dbSession: this.dbSession }
+				)
+			}
+
+			await this.dbSession.commitTransaction()
 
 			return true
 		} catch (err) {
+			if (this.inTx) {
+				await this.dbSession.abortTransaction()
+			}
 			throw err
 		}
 	}
 
 	async delete({ accountId, commentId }) {
 		try {
-			return await this.likeCtl.delete({ accountId, commentId })
+			const deletedComment = await this.commentCtl.findOneAndDelete({
+				accountId,
+				commentId,
+			})
+
+			if (deletedComment) {
+				return true
+			} else {
+				throw new Error('Comment not found')
+			}
 		} catch (err) {
 			throw err
 		}

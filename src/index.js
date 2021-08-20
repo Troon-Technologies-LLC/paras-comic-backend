@@ -42,6 +42,8 @@ const main = async () => {
 	const database = new Database()
 	await database.init()
 
+	const dbSession = database.client.startSession()
+
 	const storage = new Storage(database)
 	await storage.init()
 
@@ -55,7 +57,7 @@ const main = async () => {
 	const pageCtl = new PageCtl({ database, storage })
 
 	const comicSvc = new ComicSvc({ comicCtl })
-	const commentSvc = new CommentSvc({ commentCtl, likeCtl })
+	const commentSvc = new CommentSvc({ commentCtl, likeCtl }, { dbSession })
 	const chapterSvc = new ChapterSvc({ chapterCtl, comicCtl, pageCtl })
 	const pageSvc = new PageSvc({ pageCtl })
 
