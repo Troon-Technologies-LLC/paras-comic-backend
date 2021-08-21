@@ -59,7 +59,7 @@ class Comic {
 				{
 					$project: {
 						_id: 0,
-						// my_access: 0,
+						my_access: 0,
 					},
 				},
 				{
