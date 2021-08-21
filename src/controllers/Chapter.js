@@ -20,7 +20,7 @@ class Chapter {
 			if (query.chapterId) {
 				aggregationMatches.push({
 					$match: {
-						chapter_id: query.chapterId,
+						chapter_id: parseInt(query.chapterId),
 					},
 				})
 			}
