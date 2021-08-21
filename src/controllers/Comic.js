@@ -7,10 +7,10 @@ class Comic {
 		try {
 			const aggregationMatches = []
 
-			if (query.comic_id) {
+			if (query.comicId) {
 				aggregationMatches.push({
 					$match: {
-						comic_id: query.comic_id,
+						comic_id: query.comicId,
 					},
 				})
 			}

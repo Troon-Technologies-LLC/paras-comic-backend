@@ -73,7 +73,7 @@ const main = async () => {
 	server.get('/comics', async (req, res) => {
 		try {
 			const query = {
-				comic_id: req.query.comic_id,
+				comicId: req.query.comic_id,
 			}
 
 			const skip = req.query.__skip ? parseInt(req.query.__skip) : 0
@@ -105,7 +105,7 @@ const main = async () => {
 			const results = await chapterSvc.find({
 				comicId: comic_id,
 				chapterId: chapter_id,
-				authAccountId: 'comicSvc.test.near',
+				authAccountId: accountId,
 			})
 
 			return res.json({
@@ -130,7 +130,7 @@ const main = async () => {
 					comicId: req.params.comic_id,
 					chapterId: req.params.chapter_id,
 					pageId: req.params.page_id,
-					authAccountId: 'riqi.test.near',
+					authAccountId: accountId,
 				})
 				return axios({
 					method: 'get',
