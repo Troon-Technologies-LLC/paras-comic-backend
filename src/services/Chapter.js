@@ -47,7 +47,7 @@ class ChapterSvc {
 			const tokenType = `${comicId}-${chapterId}`
 			const price = input.price
 			const title = `${getComics[0].title} Ch.${chapterId} : ${input.subtitle}`
-			const coverFile = files.pop()
+			const coverFile = files.shift()
 
 			await this.dbSession.startTransaction()
 			this.inTx = true
