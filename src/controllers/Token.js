@@ -10,7 +10,7 @@ class TokenCtl {
 			if (query.comicId) {
 				aggregationMatches.push({
 					$match: {
-						comicId: query.comicId,
+						comic_id: query.comicId,
 					},
 				})
 			}
