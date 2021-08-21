@@ -139,8 +139,10 @@ class Chapter {
 					media: media,
 					reference: reference,
 				},
+				author_id: authorIds[0],
 				price: price,
 			}
+			console.log(params)
 
 			// dev-1629375638187-90104949233722
 			await this.near.functionCall(

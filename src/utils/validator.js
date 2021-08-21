@@ -14,7 +14,7 @@ module.exports = {
 		chapter_id: yup.string().required(),
 		price: yup.string().required(),
 		description: yup.string().required(),
-		author_ids: yup.array().of(yup.string()),
+		author_ids: yup.array().required().of(yup.string()).min(1),
 		collection: yup.string().required(),
 		subtitle: yup.string().required(),
 	}),
