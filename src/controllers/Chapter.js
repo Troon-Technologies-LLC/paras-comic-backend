@@ -80,7 +80,7 @@ class Chapter {
 				},
 				{
 					$sort: {
-						chapter_id: -1,
+						chapter_id: 1,
 					},
 				},
 				{
