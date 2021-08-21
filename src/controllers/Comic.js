@@ -21,6 +21,7 @@ class Comic {
 						from: 'access',
 						let: {
 							account_id: '$account_id',
+							comic_id: '$comic_id',
 						},
 						pipeline: [
 							{
@@ -28,6 +29,7 @@ class Comic {
 									$expr: {
 										$and: [
 											{ $eq: ['$account_id', query.ownerId] },
+											{ $eq: ['$comic_id', '$$comic_id'] },
 											{
 												$gt: [
 													{
@@ -47,7 +49,7 @@ class Comic {
 				aggregationMatches.push({
 					$match: {
 						my_access: {
-							$gt: [{ $size: '$my_access' }, 0],
+							$gt: [{ $size: '$access_tokens' }, 0],
 						},
 					},
 				})
@@ -57,7 +59,7 @@ class Comic {
 				{
 					$project: {
 						_id: 0,
-						my_access: 0,
+						// my_access: 0,
 					},
 				},
 				{
