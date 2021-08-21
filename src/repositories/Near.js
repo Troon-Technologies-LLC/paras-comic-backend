@@ -82,20 +82,13 @@ class Near {
 		deposit
 	) {
 		const account = await this._.account(accountId)
-		console.log(account)
-		const result = await account.functionCall({
+		return await account.functionCall({
 			contractId: contract,
 			methodName: method,
 			args: params,
 			gas: gas,
 			attachedDeposit: utils.format.parseNearAmount(deposit),
 		})
-		console.log(result)
-
-		// const x = await this._.account(accountId).requestSignTransactions([
-		// 	transaction,
-		// ])
-		// console.log(x)
 	}
 }
 
