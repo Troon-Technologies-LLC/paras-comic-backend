@@ -53,12 +53,14 @@ class Page {
 				throw new Error(`unauthorized`)
 			}
 
-			await this.cache.set(key, pageData.content)
 			if (pageData.content.includes('://')) {
+				await this.cache.set(key, pageData.content)
 				return pageData.content
 			}
 
-			return `https://ipfs.fleek.co/ipfs/${pageData.content}`
+			const url = `https://ipfs.fleek.co/ipfs/${pageData.content}`
+			await this.cache.set(key, url)
+			return url
 		} catch (err) {
 			throw err
 		}
