@@ -15,10 +15,49 @@ class Comic {
 				})
 			}
 
+			if (query.ownerId) {
+				aggregationMatches.push({
+					$lookup: {
+						from: 'access',
+						let: {
+							account_id: '$account_id',
+						},
+						pipeline: [
+							{
+								$match: {
+									$expr: {
+										$and: [
+											{ $eq: ['$account_id', query.ownerId] },
+											{
+												$gt: [
+													{
+														$size: '$access_tokens',
+													},
+													0,
+												],
+											},
+										],
+									},
+								},
+							},
+						],
+						as: 'my_access',
+					},
+				})
+				aggregationMatches.push({
+					$match: {
+						my_access: {
+							$gt: [{ $size: '$my_access' }, 0],
+						},
+					},
+				})
+			}
+
 			const aggregationFull = aggregationMatches.concat([
 				{
 					$project: {
 						_id: 0,
+						my_access: 0,
 					},
 				},
 				{

@@ -78,6 +78,7 @@ const main = async () => {
 		try {
 			const query = {
 				comicId: req.query.comic_id,
+				ownerId: req.query.owner_id,
 			}
 
 			const skip = req.query.__skip ? parseInt(req.query.__skip) : 0
