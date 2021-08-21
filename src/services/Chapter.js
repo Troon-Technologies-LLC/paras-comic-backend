@@ -2,10 +2,11 @@ const { chapterCreate } = require('../utils/validator')
 const { encodeImageToBlurhash } = require('../utils/common')
 
 class ChapterSvc {
-	constructor({ chapterCtl, comicCtl, pageCtl }) {
+	constructor({ chapterCtl, comicCtl, pageCtl }, { dbSession }) {
 		this.chapterCtl = chapterCtl
 		this.comicCtl = comicCtl
 		this.pageCtl = pageCtl
+		this.dbSession = dbSession
 	}
 
 	async find(query = {}, skip = 0, limit = 10) {
@@ -48,14 +49,20 @@ class ChapterSvc {
 			const title = `${getComics[0].title} Ch.${chapterId} : ${input.subtitle}`
 			const coverFile = files.pop()
 
-			// create chapter pages
-			await this.pageCtl.createBulk({
-				comicId,
-				chapterId,
-				contentList: files,
-			})
+			await this.dbSession.startTransaction()
+			this.inTx = true
 
-			return await this.chapterCtl.create({
+			// create chapter pages
+			await this.pageCtl.createBulk(
+				{
+					comicId,
+					chapterId,
+					contentList: files,
+				},
+				{ dbSession: this.dbSession }
+			)
+
+			const result = await this.chapterCtl.create({
 				tokenType: tokenType,
 				title: title,
 				price: price,
@@ -67,7 +74,13 @@ class ChapterSvc {
 				collection: input.collection,
 				subtitle: input.subtitle,
 			})
+			await this.dbSession.commitTransaction()
+
+			return result
 		} catch (err) {
+			if (this.inTx) {
+				await this.dbSession.abortTransaction()
+			}
 			throw err
 		}
 	}

@@ -58,7 +58,10 @@ const main = async () => {
 
 	const comicSvc = new ComicSvc({ comicCtl })
 	const commentSvc = new CommentSvc({ commentCtl, likeCtl }, { dbSession })
-	const chapterSvc = new ChapterSvc({ chapterCtl, comicCtl, pageCtl })
+	const chapterSvc = new ChapterSvc(
+		{ chapterCtl, comicCtl, pageCtl },
+		{ dbSession }
+	)
 	const pageSvc = new PageSvc({ pageCtl })
 
 	server.get('/', async (req, res) => {

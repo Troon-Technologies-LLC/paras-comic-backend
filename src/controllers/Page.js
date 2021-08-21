@@ -6,7 +6,7 @@ class Page {
 		this.storage = storage
 	}
 
-	async createBulk({ comicId, chapterId, contentList }) {
+	async createBulk({ comicId, chapterId, contentList }, { dbSession }) {
 		const contentHashList = await Promise.all(
 			contentList.map((file) => this.storage.upload(file, 'file', true))
 		)
@@ -18,7 +18,9 @@ class Page {
 			content: content,
 		}))
 
-		const result = await this.pageDb.insertMany(pageList)
+		const result = await this.pageDb.insertMany(pageList, {
+			session: dbSession,
+		})
 
 		return result
 	}
