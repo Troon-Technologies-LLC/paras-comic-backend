@@ -67,10 +67,17 @@ class Chapter {
 				})
 				aggregationMatches.push({
 					$addFields: {
+						my_access: {
+							$arrayElemAt: ['$my_access', 0],
+						},
+					},
+				})
+				aggregationMatches.push({
+					$addFields: {
 						status: {
 							$cond: {
 								if: {
-									$gt: [{ $size: '$my_access' }, 0],
+									$gt: [{ $size: '$my_access.access_tokens' }, 0],
 								},
 								then: 'read',
 								else: 'buy',
