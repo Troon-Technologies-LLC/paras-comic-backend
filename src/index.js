@@ -127,7 +127,7 @@ const main = async () => {
 	})
 
 	server.get('/chapters', async (req, res) => {
-		const { comic_id, chapter_id } = req.query
+		const { comic_id, chapter_id, chapter_ids } = req.query
 		const accountId = await near.authSignature(
 			req.headers.authorization,
 			'testnet'
@@ -136,6 +136,7 @@ const main = async () => {
 			const results = await chapterSvc.find({
 				comicId: comic_id,
 				chapterId: chapter_id,
+				chapterIds: chapter_ids,
 				authAccountId: accountId,
 			})
 

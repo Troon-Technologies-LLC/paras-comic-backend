@@ -24,6 +24,15 @@ class Chapter {
 					},
 				})
 			}
+			if (query.chapterIds) {
+				aggregationMatches.push({
+					$match: {
+						chapter_id: {
+							$in: query.chapterIds.map((id) => parseInt(id)),
+						},
+					},
+				})
+			}
 
 			aggregationMatches.push({
 				$addFields: {
