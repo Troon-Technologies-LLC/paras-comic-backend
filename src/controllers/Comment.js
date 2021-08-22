@@ -12,7 +12,7 @@ class Comment {
 			const newData = {
 				comment_id: uuidv4(),
 				comic_id: comicId,
-				chapter_id: chapterId,
+				chapter_id: parseInt(chapterId),
 				account_id: accountId,
 				body: body,
 				likes: 0,
