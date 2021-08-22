@@ -36,7 +36,7 @@ class Chapter {
 
 			aggregationMatches.push({
 				$addFields: {
-					status: null,
+					status: 'buy',
 				},
 			})
 
