@@ -164,6 +164,8 @@ const main = async () => {
 					pageId: req.params.page_id,
 					authAccountId: accountId,
 				})
+				res.set('Cache-Control', 'private, max-age=300')
+
 				return axios({
 					method: 'get',
 					url: content,
