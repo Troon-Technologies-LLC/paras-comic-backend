@@ -121,6 +121,8 @@ class Chapter {
 		tokenType,
 		title,
 		price,
+		comicId,
+		chapterId,
 		coverFile,
 		description,
 		blurhash,
@@ -133,6 +135,8 @@ class Chapter {
 			// reference
 			const reference = await this.storage.upload(
 				JSON.stringify({
+					comic_id: comicId,
+					chapter_id: chapterId,
 					description: description,
 					blurhash: blurhash,
 					author_ids: authorIds,

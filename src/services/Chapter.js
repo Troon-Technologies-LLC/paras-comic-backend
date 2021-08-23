@@ -66,6 +66,8 @@ class ChapterSvc {
 				tokenType: tokenType,
 				title: title,
 				price: price,
+				comicId: comicId,
+				chapterId: chapterId,
 				coverFile: coverFile,
 				blurhash: await encodeImageToBlurhash(coverFile.path),
 				description: input.description,
