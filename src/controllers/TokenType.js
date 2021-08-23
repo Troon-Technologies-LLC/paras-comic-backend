@@ -1,27 +1,11 @@
-class TokenCtl {
+class TokenTypeCtl {
 	constructor({ database }) {
-		this.tokenDb = database.root.collection('tokens')
+		this.tokenTypeDb = database.root.collection('token_types')
 	}
 
 	async find(query = {}, skip = 0, limit = 10) {
 		try {
 			const aggregationMatches = []
-
-			if (query.comicId) {
-				aggregationMatches.push({
-					$match: {
-						comic_id: query.comicId,
-					},
-				})
-			}
-
-			if (query.ownerId) {
-				aggregationMatches.push({
-					$match: {
-						owner_id: query.ownerId,
-					},
-				})
-			}
 
 			if (query.tokenType) {
 				aggregationMatches.push({
@@ -39,7 +23,7 @@ class TokenCtl {
 				},
 				{
 					$sort: {
-						chapter_id: 1,
+						'metadata.issued_at': -1,
 					},
 				},
 				{
@@ -50,7 +34,7 @@ class TokenCtl {
 				},
 			])
 
-			const rawResults = await this.tokenDb.aggregate(aggregationFull)
+			const rawResults = await this.tokenTypeDb.aggregate(aggregationFull)
 
 			const results = await rawResults.toArray()
 			return results
@@ -60,4 +44,4 @@ class TokenCtl {
 	}
 }
 
-module.exports = TokenCtl
+module.exports = TokenTypeCtl

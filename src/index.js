@@ -22,6 +22,8 @@ const ChapterSvc = require('./services/Chapter')
 const PageSvc = require('./services/Page')
 const TokenCtl = require('./controllers/Token')
 const TokenSvc = require('./services/Token')
+const TokenTypeCtl = require('./controllers/TokenType')
+const TokenTypeSvc = require('./services/TokenType')
 
 const PORT = process.env.PORT || 9090
 const server = express()
@@ -58,9 +60,11 @@ const main = async () => {
 	const chapterCtl = new ChapterCtl({ database, storage, near })
 	const pageCtl = new PageCtl({ database, storage })
 	const tokenCtl = new TokenCtl({ database })
+	const tokenTypeCtl = new TokenTypeCtl({ database })
 
 	const comicSvc = new ComicSvc({ comicCtl })
 	const tokenSvc = new TokenSvc({ tokenCtl })
+	const tokenTypeSvc = new TokenTypeSvc({ tokenTypeCtl })
 	const commentSvc = new CommentSvc({ commentCtl, likeCtl }, { dbSession })
 	const chapterSvc = new ChapterSvc(
 		{ chapterCtl, comicCtl, pageCtl },
@@ -100,11 +104,37 @@ const main = async () => {
 		}
 	})
 
+	server.get('/token_types', async (req, res) => {
+		try {
+			const query = {
+				tokenType: req.query.token_type,
+			}
+
+			const skip = req.query.__skip ? parseInt(req.query.__skip) : 0
+			const limit = req.query.__limit
+				? Math.min(parseInt(req.query.__limit), 10)
+				: 10
+
+			const results = await tokenTypeSvc.find(query, skip, limit)
+
+			return res.json({
+				status: 1,
+				data: results,
+			})
+		} catch (err) {
+			return res.status(400).json({
+				status: 0,
+				message: err.message,
+			})
+		}
+	})
+
 	server.get('/tokens', async (req, res) => {
 		try {
 			const query = {
 				comicId: req.query.comic_id,
 				ownerId: req.query.owner_id,
+				tokenType: req.query.token_type,
 			}
 
 			const skip = req.query.__skip ? parseInt(req.query.__skip) : 0
