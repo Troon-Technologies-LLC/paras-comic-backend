@@ -68,7 +68,10 @@ class Chapter {
 				aggregationMatches.push({
 					$addFields: {
 						my_access: {
-							$arrayElemAt: ['$my_access', 0],
+							$ifNull: [
+								{ $arrayElemAt: ['$my_access', 0] },
+								{ access_tokens: [] },
+							],
 						},
 					},
 				})
