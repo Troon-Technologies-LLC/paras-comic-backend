@@ -39,14 +39,14 @@ class TokenCtl {
 				})
 			}
 
-			if (query.type === 'chapter') {
+			if (query.category === 'chapter') {
 				aggregationMatches.push({
 					$match: {
 						'metadata.chapter_id': { $exists: true },
 					},
 				})
 			}
-			if (query.type === 'collectible') {
+			if (query.category === 'collectible') {
 				aggregationMatches.push({
 					$match: {
 						'metadata.chapter_id': { $exists: false },

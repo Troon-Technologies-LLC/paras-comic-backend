@@ -15,6 +15,21 @@ class TokenTypeCtl {
 				})
 			}
 
+			if (query.category === 'chapter') {
+				aggregationMatches.push({
+					$match: {
+						'metadata.chapter_id': { $exists: true },
+					},
+				})
+			}
+			if (query.category === 'collectible') {
+				aggregationMatches.push({
+					$match: {
+						'metadata.chapter_id': { $exists: false },
+					},
+				})
+			}
+
 			const aggregationFull = aggregationMatches.concat([
 				{
 					$project: {

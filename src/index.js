@@ -108,6 +108,7 @@ const main = async () => {
 		try {
 			const query = {
 				tokenType: req.query.token_type,
+				category: req.query.category,
 			}
 
 			const skip = req.query.__skip ? parseInt(req.query.__skip) : 0
@@ -136,7 +137,7 @@ const main = async () => {
 				ownerId: req.query.owner_id,
 				tokenType: req.query.token_type,
 				tokenId: req.query.token_id,
-				type: req.query.type,
+				category: req.query.category,
 			}
 
 			const skip = req.query.__skip ? parseInt(req.query.__skip) : 0
