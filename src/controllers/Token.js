@@ -23,10 +23,33 @@ class TokenCtl {
 				})
 			}
 
+			if (query.tokenId) {
+				aggregationMatches.push({
+					$match: {
+						token_id: query.tokenId,
+					},
+				})
+			}
+
 			if (query.tokenType) {
 				aggregationMatches.push({
 					$match: {
 						token_type: query.tokenType,
+					},
+				})
+			}
+
+			if (query.type === 'chapter') {
+				aggregationMatches.push({
+					$match: {
+						'metadata.chapter_id': { $exists: true },
+					},
+				})
+			}
+			if (query.type === 'collectible') {
+				aggregationMatches.push({
+					$match: {
+						'metadata.chapter_id': { $exists: false },
 					},
 				})
 			}
