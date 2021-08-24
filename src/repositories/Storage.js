@@ -57,18 +57,9 @@ class Storage {
 		}
 		result = result.replace(/^"|"$/g, '')
 		// if type = file, upload to cdn
-		if (
-			type === 'file' &&
-			this.imagekit &&
-			process.env.NODE_ENV === 'mainnet'
-		) {
+		if (type === 'file' && this.imagekit) {
+			await this.uploadToCDN(content, result, [process.env.NODE_ENV, 'comic'])
 			try {
-				await this.imagekit.upload({
-					file: content,
-					fileName: result,
-					tags: [process.env.NODE_ENV],
-					useUniqueFileName: false,
-				})
 			} catch (err) {
 				console.log(err)
 			}
@@ -77,6 +68,15 @@ class Storage {
 		const value = [{ cid: result, content: content }]
 		this.database.cache.set(key, value)
 		return `${result}`
+	}
+
+	async uploadToCDN(content, filename, tags = []) {
+		await this.imagekit.upload({
+			file: content,
+			fileName: filename,
+			tags: tags,
+			useUniqueFileName: false,
+		})
 	}
 
 	async isCID(hash) {

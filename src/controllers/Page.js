@@ -58,7 +58,9 @@ class Page {
 				return pageData.content
 			}
 
-			const url = `https://ipfs.fleek.co/ipfs/${pageData.content}`
+			// use cdn
+			const url = `https://cdn.paras.id/${pageData.content}`
+			// const url = `https://ipfs.fleek.co/ipfs/${pageData.content}`
 			await this.cache.set(key, url)
 			return url
 		} catch (err) {
