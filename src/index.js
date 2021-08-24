@@ -107,6 +107,7 @@ const main = async () => {
 	server.get('/token_types', async (req, res) => {
 		try {
 			const query = {
+				comicId: req.query.comic_id,
 				tokenType: req.query.token_type,
 				category: req.query.category,
 			}

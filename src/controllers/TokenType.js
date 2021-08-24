@@ -7,6 +7,14 @@ class TokenTypeCtl {
 		try {
 			const aggregationMatches = []
 
+			if (query.comicId) {
+				aggregationMatches.push({
+					$match: {
+						comic_id: query.comicId,
+					},
+				})
+			}
+
 			if (query.tokenType) {
 				aggregationMatches.push({
 					$match: {
