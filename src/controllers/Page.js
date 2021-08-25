@@ -1,6 +1,6 @@
-const pLimit = require('p-limit')
+var promiseLimit = require('promise-limit')
 
-const limit = pLimit(5)
+var limit = promiseLimit(2)
 
 class Page {
 	constructor({ database, storage }) {
