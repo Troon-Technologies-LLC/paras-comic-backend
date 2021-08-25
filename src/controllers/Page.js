@@ -1,3 +1,7 @@
+const pLimit = require('p-limit')
+
+const limit = pLimit(5)
+
 class Page {
 	constructor({ database, storage }) {
 		this.pageDb = database.root.collection('pages')
@@ -8,7 +12,9 @@ class Page {
 
 	async createBulk({ comicId, chapterId, contentList }, { dbSession }) {
 		const contentHashList = await Promise.all(
-			contentList.map((file) => this.storage.upload(file, 'file', true))
+			contentList.map((file) => {
+				return limit(() => this.storage.upload(file, 'file', true))
+			})
 		)
 
 		const pageList = contentHashList.map((content, idx) => ({

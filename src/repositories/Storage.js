@@ -58,8 +58,8 @@ class Storage {
 		result = result.replace(/^"|"$/g, '')
 		// if type = file, upload to cdn
 		if (type === 'file' && this.imagekit) {
-			await this.uploadToCDN(content, result, [process.env.NODE_ENV, 'comic'])
 			try {
+				await this.uploadToCDN(content, result, [process.env.NODE_ENV, 'comic'])
 			} catch (err) {
 				console.log(err)
 			}
