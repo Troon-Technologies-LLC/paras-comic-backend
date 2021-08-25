@@ -1,6 +1,6 @@
 var promiseLimit = require('promise-limit')
 
-var limit = promiseLimit(2)
+var limit = promiseLimit(6)
 
 class Page {
 	constructor({ database, storage }) {
@@ -11,11 +11,7 @@ class Page {
 	}
 
 	async createBulk({ comicId, chapterId, contentList }, { dbSession }) {
-		const contentHashList = await Promise.all(
-			contentList.map((file) => {
-				return limit(() => this.storage.upload(file, 'file', true))
-			})
-		)
+		const contentHashList = contentList
 
 		const pageList = contentHashList.map((content, idx) => ({
 			comic_id: comicId,

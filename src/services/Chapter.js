@@ -23,7 +23,7 @@ class ChapterSvc {
 		}
 	}
 
-	async create(input, files) {
+	async create(input) {
 		try {
 			await chapterCreate.validate(input, {
 				abortEarly: true,
@@ -47,7 +47,10 @@ class ChapterSvc {
 			const tokenType = `${comicId}-${chapterId}`
 			const price = input.price
 			const title = `${getComics[0].title} Ch.${chapterId} : ${input.subtitle}`
-			const coverFile = files.shift()
+			const media = input.images.shift()
+			const blurhash = await encodeImageToBlurhash(
+				`https://ipfs.fleek.co/ipfs/${media}`
+			)
 
 			await this.dbSession.startTransaction()
 			this.inTx = true
@@ -57,7 +60,7 @@ class ChapterSvc {
 				{
 					comicId,
 					chapterId,
-					contentList: files,
+					contentList: input.images,
 				},
 				{ dbSession: this.dbSession }
 			)
@@ -68,11 +71,11 @@ class ChapterSvc {
 				price: price,
 				comicId: comicId,
 				chapterId: chapterId,
-				coverFile: coverFile,
-				blurhash: await encodeImageToBlurhash(coverFile.path),
+				media: media,
+				blurhash: blurhash,
 				description: input.description,
 				authorIds: input.author_ids,
-				pageCount: files.length,
+				pageCount: input.images.length,
 				collection: input.collection,
 				subtitle: input.subtitle,
 			})

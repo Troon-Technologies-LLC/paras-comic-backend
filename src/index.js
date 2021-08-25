@@ -216,11 +216,32 @@ const main = async () => {
 		}
 	)
 
+	server.post(
+		'/upload/single',
+		authenticate(near, 'testnet'),
+		async (req, res) => {
+			try {
+				await multer.bulk(req, res)
+
+				const result = await storage.upload(req.files[0], 'file')
+
+				res.json({
+					status: 1,
+					data: result,
+				})
+			} catch (err) {
+				console.log(err)
+				res.status(400).json({
+					status: 0,
+					message: err.message || err,
+				})
+			}
+		}
+	)
+
 	server.post('/chapters', authenticate(near, 'testnet'), async (req, res) => {
 		try {
-			await multer.bulk(req, res)
-
-			const result = await chapterSvc.create(req.body, req.files)
+			const result = await chapterSvc.create(req.body)
 
 			res.json({
 				status: 1,

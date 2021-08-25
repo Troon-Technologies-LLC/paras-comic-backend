@@ -31,26 +31,30 @@ class Storage {
 	async upload(input, type = 'file') {
 		let result = null
 		let content = null
-		if (type === 'file') {
-			content = readFileSync(input.path)
-			const uploadedFile = await fleekStorage.upload({
-				apiKey: process.env.FLEEK_API_KEY,
-				apiSecret: process.env.FLEEK_API_SECRET,
-				key: input.filename,
-				data: content,
-			})
-			result = uploadedFile.hash
-		} else {
-			const uploadedFile = await fleekStorage.upload({
-				apiKey: process.env.FLEEK_API_KEY,
-				apiSecret: process.env.FLEEK_API_SECRET,
-				key: uuidv4(),
-				data: input,
-			})
-			result = uploadedFile.hash
-		}
-		if (!result) {
-			throw 'Failed to upload'
+		try {
+			if (type === 'file') {
+				content = readFileSync(input.path)
+				const uploadedFile = await fleekStorage.upload({
+					apiKey: process.env.FLEEK_API_KEY,
+					apiSecret: process.env.FLEEK_API_SECRET,
+					key: input.filename,
+					data: content,
+				})
+				result = uploadedFile.hash
+			} else {
+				const uploadedFile = await fleekStorage.upload({
+					apiKey: process.env.FLEEK_API_KEY,
+					apiSecret: process.env.FLEEK_API_SECRET,
+					key: uuidv4(),
+					data: input,
+				})
+				result = uploadedFile.hash
+			}
+			if (!result) {
+				throw 'Failed to upload'
+			}
+		} catch (err) {
+			throw err
 		}
 		if (result.cid) {
 			result = result.cid.toString()

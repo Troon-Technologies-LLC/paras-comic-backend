@@ -126,7 +126,7 @@ class Chapter {
 		price,
 		comicId,
 		chapterId,
-		coverFile,
+		media,
 		description,
 		blurhash,
 		authorIds,
@@ -151,9 +151,6 @@ class Chapter {
 				'json',
 				true
 			)
-
-			// create new token type & chapter
-			const media = await this.storage.upload(coverFile, 'file', true)
 
 			const params = {
 				token_type: tokenType,
