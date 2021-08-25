@@ -169,8 +169,8 @@ class Chapter {
 
 			// dev-1629375638187-90104949233722
 			await this.near.functionCall(
-				'rng.testnet',
-				'dev-1629375638187-90104949233722',
+				process.env.OWNER_ACCOUNT_ID,
+				process.env.CONTRACT_ACCOUNT_ID,
 				'nft_create_type',
 				params,
 				this.near.DEFAULT_GAS,
