@@ -63,6 +63,7 @@ class TokenCtl {
 				{
 					$sort: {
 						chapter_id: 1,
+						edition_id: 1,
 					},
 				},
 				{
