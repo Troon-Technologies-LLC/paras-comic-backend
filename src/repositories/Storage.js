@@ -71,6 +71,14 @@ class Storage {
 		const key = `storage::${result}`
 		const value = [{ cid: result, content: content }]
 		this.database.cache.set(key, value)
+
+		try {
+			// delete temp file
+			unlinkSync(input.path)
+		} catch (err) {
+			console.log(err)
+		}
+
 		return `${result}`
 	}
 
