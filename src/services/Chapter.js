@@ -65,20 +65,20 @@ class ChapterSvc {
 				{ dbSession: this.dbSession }
 			)
 
-			const result = await this.chapterCtl.create({
-				tokenType: tokenType,
-				title: title,
-				price: price,
-				comicId: comicId,
-				chapterId: chapterId,
-				media: media,
-				blurhash: blurhash,
-				description: input.description,
-				authorIds: input.author_ids,
-				pageCount: input.images.length,
-				collection: input.collection,
-				subtitle: input.subtitle,
-			})
+			// const result = await this.chapterCtl.create({
+			// 	tokenType: tokenType,
+			// 	title: title,
+			// 	price: price,
+			// 	comicId: comicId,
+			// 	chapterId: chapterId,
+			// 	media: media,
+			// 	blurhash: blurhash,
+			// 	description: input.description,
+			// 	authorIds: input.author_ids,
+			// 	pageCount: input.images.length,
+			// 	collection: input.collection,
+			// 	subtitle: input.subtitle,
+			// })
 			await this.dbSession.commitTransaction()
 
 			return result
