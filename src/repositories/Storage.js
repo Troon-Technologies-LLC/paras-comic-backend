@@ -66,6 +66,7 @@ class Storage {
 				await this.uploadToCDN(content, result, [process.env.NODE_ENV, 'comic'])
 			} catch (err) {
 				console.log(err)
+				throw err
 			}
 		}
 		const key = `storage::${result}`
