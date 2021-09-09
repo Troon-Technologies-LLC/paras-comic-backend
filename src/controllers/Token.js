@@ -3,7 +3,7 @@ class TokenCtl {
 		this.tokenDb = database.root.collection('tokens')
 	}
 
-	async find(query = {}, skip = 0, limit = 10) {
+	async find(query = {}, skip = 0, limit = 30) {
 		try {
 			const aggregationMatches = []
 

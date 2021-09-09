@@ -33,14 +33,10 @@ function readFiles(dirname) {
 		fs.readdir(dirname, function (err, filenames) {
 			if (err) return reject(err)
 			promiseAllP(filenames, (filename, index, resolve, reject) => {
-				fs.readFile(
-					path.resolve(dirname, filename),
-					'binary',
-					function (err, content) {
-						if (err) return reject(err)
-						return resolve({ filename: filename, contents: content })
-					}
-				)
+				fs.readFile(path.resolve(dirname, filename), function (err, content) {
+					if (err) return reject(err)
+					return resolve({ filename: filename, contents: content })
+				})
 			})
 				.then((results) => {
 					return resolve(results)
@@ -55,43 +51,55 @@ function readFiles(dirname) {
 const main = async () => {
 	const pages = await readFiles(path.join(process.cwd(), 'temp', 'chapters'))
 
-	const formData = new FormData()
+	// const url = `https://comic-dev-api.paras.id`
+	const url = `https://api-comic-alpha-testnet.paras.id`
+	// const url = `http://localhost:9090`
 
-	formData.append(`comic_id`, `paradigm`)
-	formData.append(`chapter_id`, `5`)
-	formData.append(`subtitle`, `Genesis`)
-	formData.append(`price`, `0`)
-	formData.append(`collection`, `Paradigm`)
-	formData.append(
-		`description`,
-		`In desolate and sequestered lands, Abee wakes up remembering nothing but the hackathon he just participated in. Alongside three new companies, Abee will take part in an adventure, discover new knowledge, and commit risky endeavors.`
-	)
-	formData.append(`author_ids`, JSON.stringify([`afiq.testnest`]))
-
-	const files = [...Array(pages.length).keys()]
+	const images = [...Array(pages.length).keys()]
+	const imageHashes = []
 
 	for await (const page of pages) {
 		const [idx, ext] = page.filename.split('.')
-		files[parseInt(idx)] = page
+		images[parseInt(idx)] = page
 	}
 
-	for await (const [key, value] of files.entries()) {
-		formData.append(`files`, value.contents, value.filename)
-	}
+	for await (const [key, value] of images.entries()) {
+		const formData = new FormData()
+		formData.append('files', value.contents, value.filename)
 
-	const url = `https://comic-dev-api.paras.id`
-	try {
-		console.log('Uploading...')
-		const resp = await axios.post(`${url}/chapters`, formData, {
-			maxContentLength: Infinity,
-			maxBodyLength: Infinity,
+		const resp = await axios.post(`${url}/upload/single`, formData, {
 			headers: {
 				'Content-Type':
 					'multipart/form-data;boundary=' + formData.getBoundary(),
-				Authorization:
-					'dGhlY3JlYXRvci50ZXN0bmV0JjJjMGI4ZDJlM2JjYTRkOThkNmFhZWYxOWE4M2I2ZTE3ZmMwZDhiNWU4MmJkZTlmNjU0ZWU3Zjk5NzEzYjQ5YmQmOWI3YTgyODRlMGZiNzJmYWY2YWExZjlhN2MyZGEzMDE0YzI4YzllNmZjMDk1M2I5YjVkY2RlMzQ4NWJiMDIwNTYxYzI1ZGFhMWM3N2EwNDhlY2Y2ZTYxOWJmNDljYzQ1M2YxOGMxNzZjOGFlMDU5N2YxZDRlNTc3MjcyMDQ1MDc=',
+				Authorization: process.env.AUTH_TOKEN,
 			},
 		})
+		fs.writeFileSync('./chapter1_hashes.json', JSON.stringify(imageHashes))
+		imageHashes.push(resp.data.data)
+		console.log(`Uploaded ${parseFloat(key / pages.length).toPrecision(4)}%`)
+	}
+
+	try {
+		console.log('Creating new chapter...')
+		const resp = await axios.post(
+			`${url}/chapters`,
+			{
+				comic_id: 'paradigm',
+				chapter_id: 1,
+				price: '0',
+				description:
+					'In desolate and sequestered lands, Abee wakes up remembering nothing but the hackathon he just participated in. Alongside three new companies, Abee will take part in an adventure, discover new knowledge, and commit risky endeavors.',
+				author_ids: ['afiq.testnet'],
+				collection: 'Paradigm',
+				subtitle: 'Genesis',
+				images: imageHashes,
+			},
+			{
+				headers: {
+					Authorization: process.env.AUTH_TOKEN,
+				},
+			}
+		)
 		console.log(resp)
 	} catch (err) {
 		console.log(err)
