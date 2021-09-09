@@ -142,9 +142,7 @@ const main = async () => {
 			}
 
 			const skip = req.query.__skip ? parseInt(req.query.__skip) : 0
-			const limit = req.query.__limit
-				? Math.min(parseInt(req.query.__limit), 30)
-				: 30
+			const limit = req.query.__limit ? parseInt(req.query.__limit) : 30
 
 			const results = await tokenSvc.find(query, skip, limit)
 
