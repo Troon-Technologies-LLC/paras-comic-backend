@@ -10,7 +10,7 @@ class Page {
 		this.storage = storage
 	}
 
-	async createBulk({ comicId, chapterId, contentList }, { dbSession }) {
+	async createBulk({ comicId, chapterId, contentList, lang }, { dbSession }) {
 		const contentHashList = contentList
 
 		const pageList = contentHashList.map((content, idx) => ({
@@ -18,6 +18,7 @@ class Page {
 			chapter_id: parseInt(chapterId),
 			page_id: idx + 1,
 			content: content,
+			lang: lang,
 		}))
 
 		const result = await this.pageDb.insertMany(pageList, {

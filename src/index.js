@@ -70,7 +70,7 @@ const main = async () => {
 		{ chapterCtl, comicCtl, pageCtl },
 		{ dbSession }
 	)
-	const pageSvc = new PageSvc({ pageCtl })
+	const pageSvc = new PageSvc({ comicCtl, chapterCtl, pageCtl }, { dbSession })
 
 	server.get('/', async (req, res) => {
 		res.json({
@@ -184,6 +184,31 @@ const main = async () => {
 		}
 	})
 
+	server.post(
+		'/pages/:comid_id/:chapter_id',
+		authenticate(near, 'testnet'),
+		async (req, res) => {
+			try {
+				const result = await pageSvc.createBulk({
+					...req.body,
+					comic_id: req.params.comid_id,
+					chapter_id: req.params.chapter_id,
+				})
+
+				res.json({
+					status: 1,
+					data: result,
+				})
+			} catch (err) {
+				console.log(err)
+				res.status(400).json({
+					status: 0,
+					message: err.message || err,
+				})
+			}
+		}
+	)
+
 	server.get(
 		'/pages/:comic_id/:chapter_id/:page_id',
 		authenticate(near),
@@ -220,6 +245,7 @@ const main = async () => {
 		async (req, res) => {
 			try {
 				await multer.bulk(req, res)
+				console.log(req.files[0])
 
 				const result = await storage.upload(req.files[0], 'file')
 
