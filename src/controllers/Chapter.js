@@ -120,6 +120,42 @@ class Chapter {
 		}
 	}
 
+	async addLanguage({ chapterId, comicId, lang }, { dbSession }) {
+		await this.chapterDb.findOneAndUpdate(
+			{
+				chapter_id: chapterId,
+				comic_id: comicId,
+			},
+			{
+				$addToSet: {
+					lang: lang,
+				},
+			},
+			{
+				session: dbSession,
+			}
+		)
+		return true
+	}
+
+	async removeLanguage({ chapterId, comicId, lang }, { dbSession }) {
+		await this.chapterDb.findOneAndUpdate(
+			{
+				chapter_id: chapterId,
+				comic_id: comicId,
+			},
+			{
+				$pull: {
+					lang: lang,
+				},
+			},
+			{
+				session: dbSession,
+			}
+		)
+		return true
+	}
+
 	async create({
 		tokenType,
 		title,
