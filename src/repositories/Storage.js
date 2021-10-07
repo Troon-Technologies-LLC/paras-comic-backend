@@ -61,17 +61,20 @@ class Storage {
 		}
 		result = result.replace(/^"|"$/g, '')
 		// if type = file, upload to cdn
-		if (this.imagekit) {
+		if (this.imagekit && content) {
 			try {
-				await this.uploadToCDN(input, result, [process.env.NODE_ENV, 'comic'])
+				await this.uploadToCDN(content, result, [process.env.NODE_ENV, 'comic'])
 			} catch (err) {
 				console.log(err)
 				throw err
 			}
 		}
-		const key = `storage::${result}`
-		const value = [{ cid: result, content: content }]
-		this.database.cache.set(key, value)
+
+		if (content) {
+			const key = `storage::${result}`
+			const value = [{ cid: result, content: content }]
+			this.database.cache.set(key, value)
+		}
 
 		if (input.path) {
 			try {
