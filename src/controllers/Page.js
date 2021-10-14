@@ -21,6 +21,17 @@ class Page {
 			lang: lang,
 		}))
 
+		await this.pageDb.deleteMany(
+			{
+				comic_id: comicId,
+				chapter_id: parseInt(chapterId),
+				lang: lang,
+			},
+			{
+				session: dbSession,
+			}
+		)
+
 		const result = await this.pageDb.insertMany(pageList, {
 			session: dbSession,
 		})
@@ -28,33 +39,39 @@ class Page {
 		return result
 	}
 
-	async getContent({ comicId, chapterId, pageId, authAccountId }) {
-		const key = `${comicId}::${chapterId}::${pageId}::${authAccountId}`
+	async getContent({ comicId, chapterId, pageId, lang, authAccountId }) {
+		const key = `${comicId}::${chapterId}::${pageId}::${lang}::${authAccountId}`
 		try {
 			const cacheExist = await this.cache.get(key)
 			if (cacheExist) {
 				return cacheExist
 			}
 
-			const pageData = await this.pageDb.findOne({
+			const query = {
 				comic_id: comicId,
 				chapter_id: parseInt(chapterId),
 				page_id: parseInt(pageId),
-			})
+			}
+
+			if (lang) {
+				query.lang = lang
+			}
+
+			const pageData = await this.pageDb.findOne(query)
 			if (!pageData) {
 				throw new Error(`page not found`)
 			}
-			const accessData = await this.accessDb.findOne({
-				comic_id: comicId,
-				chapter_id: parseInt(chapterId),
-				account_id: authAccountId,
-			})
-			if (
-				!accessData ||
-				(accessData && accessData.access_tokens.length === 0)
-			) {
-				throw new Error(`unauthorized`)
-			}
+			// const accessData = await this.accessDb.findOne({
+			// 	comic_id: comicId,
+			// 	chapter_id: parseInt(chapterId),
+			// 	account_id: authAccountId,
+			// })
+			// if (
+			// 	!accessData ||
+			// 	(accessData && accessData.access_tokens.length === 0)
+			// ) {
+			// 	throw new Error(`unauthorized`)
+			// }
 
 			if (pageData.content.includes('://')) {
 				await this.cache.set(key, pageData.content)

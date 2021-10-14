@@ -7,12 +7,13 @@ class PageSvc {
 		this.dbSession = dbSession
 	}
 
-	async getContent({ comicId, chapterId, pageId, authAccountId }) {
+	async getContent({ comicId, chapterId, pageId, lang, authAccountId }) {
 		try {
 			return await this.pageCtl.getContent({
 				comicId,
 				chapterId,
 				pageId,
+				lang,
 				authAccountId,
 			})
 		} catch (err) {
@@ -28,6 +29,8 @@ class PageSvc {
 
 			const comicId = input.comic_id
 			const lang = input.lang
+			const pageCount = input.images.length
+
 			const getComics = await this.comicCtl.find({
 				comicId: comicId,
 			})
@@ -36,8 +39,8 @@ class PageSvc {
 			}
 			const chapterId = parseInt(input.chapter_id)
 			const getChapters = await this.chapterCtl.find({
-				comicId: comicId,
-				chapterId: chapterId,
+				comic_id: comicId,
+				chapter_id: chapterId,
 			})
 			if (getChapters.length === 0) {
 				throw new Error('Chapter not found')
@@ -52,6 +55,7 @@ class PageSvc {
 					comicId,
 					chapterId,
 					lang,
+					pageCount,
 				},
 				{ dbSession: this.dbSession }
 			)

@@ -47,23 +47,13 @@ class ChapterSvc {
 			const tokenType = `${comicId}-${chapterId}`
 			const price = input.price
 			const title = `${getComics[0].title} Ch.${chapterId} : ${input.subtitle}`
-			const media = input.images.shift()
+			const media = input.media
 			const blurhash = await encodeImageToBlurhash(
 				`https://ipfs.fleek.co/ipfs/${media}`
 			)
 
 			await this.dbSession.startTransaction()
 			this.inTx = true
-
-			// create chapter pages
-			await this.pageCtl.createBulk(
-				{
-					comicId,
-					chapterId,
-					contentList: input.images,
-				},
-				{ dbSession: this.dbSession }
-			)
 
 			const result = await this.chapterCtl.create({
 				tokenType: tokenType,
@@ -75,11 +65,13 @@ class ChapterSvc {
 				blurhash: blurhash,
 				description: input.description,
 				authorIds: input.author_ids,
-				pageCount: input.images.length,
 				collection: input.collection,
 				subtitle: input.subtitle,
 			})
+
 			await this.dbSession.commitTransaction()
+
+			this.inTx = false
 
 			return result
 		} catch (err) {

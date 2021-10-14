@@ -26,6 +26,7 @@
     "paras-sdk": "^1.0.1",
     "promise-limit": "^2.7.0",
     "sharp": "^0.29.0",
+    "slug": "^5.1.0",
     "tweetnacl": "^1.0.3",
     "util": "^0.12.4",
     "uuid": "^8.3.2",

@@ -22,8 +22,8 @@ const ChapterSvc = require('./services/Chapter')
 const PageSvc = require('./services/Page')
 const TokenCtl = require('./controllers/Token')
 const TokenSvc = require('./services/Token')
-const TokenTypeCtl = require('./controllers/TokenType')
-const TokenTypeSvc = require('./services/TokenType')
+const TokenSeriesCtl = require('./controllers/TokenSeries')
+const TokenSeriesSvc = require('./services/TokenSeries')
 
 const PORT = process.env.PORT || 9090
 const server = express()
@@ -60,11 +60,11 @@ const main = async () => {
 	const chapterCtl = new ChapterCtl({ database, storage, near })
 	const pageCtl = new PageCtl({ database, storage })
 	const tokenCtl = new TokenCtl({ database })
-	const tokenTypeCtl = new TokenTypeCtl({ database })
+	const tokenSeriesCtl = new TokenSeriesCtl({ database })
 
 	const comicSvc = new ComicSvc({ comicCtl })
 	const tokenSvc = new TokenSvc({ tokenCtl })
-	const tokenTypeSvc = new TokenTypeSvc({ tokenTypeCtl })
+	const tokenSeriesSvc = new TokenSeriesSvc({ tokenSeriesCtl })
 	const commentSvc = new CommentSvc({ commentCtl, likeCtl }, { dbSession })
 	const chapterSvc = new ChapterSvc(
 		{ chapterCtl, comicCtl, pageCtl },
@@ -76,6 +76,20 @@ const main = async () => {
 		res.json({
 			status: 1,
 		})
+	})
+
+	server.get('/storage-cache/:hash', async (req, res) => {
+		try {
+			const result = await storage.get(req.params.hash)
+			const resultJson = JSON.parse(result[0].content.toString('utf8'))
+			res.json(resultJson)
+		} catch (err) {
+			console.log(err)
+			res.status(400).json({
+				status: 0,
+				message: err.message || err,
+			})
+		}
 	})
 
 	server.get('/comics', async (req, res) => {
@@ -104,11 +118,11 @@ const main = async () => {
 		}
 	})
 
-	server.get('/token_types', async (req, res) => {
+	server.get('/token-series', async (req, res) => {
 		try {
 			const query = {
 				comicId: req.query.comic_id,
-				tokenType: req.query.token_type,
+				tokenSeriesId: req.query.token_series_id,
 				category: req.query.category,
 			}
 
@@ -117,7 +131,7 @@ const main = async () => {
 				? Math.min(parseInt(req.query.__limit), 10)
 				: 10
 
-			const results = await tokenTypeSvc.find(query, skip, limit)
+			const results = await tokenSeriesSvc.find(query, skip, limit)
 
 			return res.json({
 				status: 1,
@@ -219,6 +233,38 @@ const main = async () => {
 					comicId: req.params.comic_id,
 					chapterId: req.params.chapter_id,
 					pageId: req.params.page_id,
+					lang: null,
+					authAccountId: accountId,
+				})
+				res.set('Cache-Control', 'private, max-age=300')
+
+				return axios({
+					method: 'get',
+					url: content,
+					responseType: 'stream',
+				}).then(function (response) {
+					response.data.pipe(res)
+				})
+			} catch (err) {
+				return res.status(400).json({
+					status: 0,
+					message: err.message,
+				})
+			}
+		}
+	)
+
+	server.get(
+		'/pages/:comic_id/:chapter_id/:page_id/:lang',
+		authenticate(near),
+		async (req, res) => {
+			const accountId = req.accountId
+			try {
+				const content = await pageSvc.getContent({
+					comicId: req.params.comic_id,
+					chapterId: req.params.chapter_id,
+					pageId: req.params.page_id,
+					lang: req.params.lang,
 					authAccountId: accountId,
 				})
 				res.set('Cache-Control', 'private, max-age=300')

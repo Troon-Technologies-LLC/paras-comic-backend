@@ -18,7 +18,7 @@ module.exports = {
 		author_ids: yup.array().required().of(yup.string()).min(1),
 		collection: yup.string().required(),
 		subtitle: yup.string().required(),
-		images: yup.array().required().of(yup.string()).min(2),
+		media: yup.string().required(),
 	}),
 	chapterPageCreate: yup.object().shape({
 		comic_id: yup.string().required(),

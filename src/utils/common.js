@@ -12,7 +12,6 @@ const encodeImageToBlurhash = (url) => {
 			.ensureAlpha()
 			.resize(32, 32, { fit: 'inside' })
 			.toBuffer((err, buffer, info) => {
-				console.log(info)
 				if (err) return reject(err)
 				resolve(
 					encode(new Uint8ClampedArray(buffer), info.width, info.height, 4, 4)

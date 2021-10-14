@@ -1,6 +1,6 @@
-class TokenTypeCtl {
+class TokenSeriesCtl {
 	constructor({ database }) {
-		this.tokenTypeDb = database.root.collection('token_types')
+		this.tokenSeriesDb = database.root.collection('token_series')
 	}
 
 	async find(query = {}, skip = 0, limit = 10) {
@@ -15,10 +15,10 @@ class TokenTypeCtl {
 				})
 			}
 
-			if (query.tokenType) {
+			if (query.tokenSeries) {
 				aggregationMatches.push({
 					$match: {
-						token_type: query.tokenType,
+						token_series_id: query.tokenSeries,
 					},
 				})
 			}
@@ -57,7 +57,7 @@ class TokenTypeCtl {
 				},
 			])
 
-			const rawResults = await this.tokenTypeDb.aggregate(aggregationFull)
+			const rawResults = await this.tokenSeriesDb.aggregate(aggregationFull)
 
 			const results = await rawResults.toArray()
 			return results
@@ -67,4 +67,4 @@ class TokenTypeCtl {
 	}
 }
 
-module.exports = TokenTypeCtl
+module.exports = TokenSeriesCtl

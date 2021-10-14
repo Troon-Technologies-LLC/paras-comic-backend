@@ -1,3 +1,6 @@
+const AsyncRetry = require('async-retry')
+const slug = require('slug')
+
 class Chapter {
 	constructor({ database, storage, near }) {
 		this.chapterDb = database.root.collection('chapters')
@@ -12,7 +15,7 @@ class Chapter {
 			if (query.comicId) {
 				aggregationMatches.push({
 					$match: {
-						comic_id: query.comicId,
+						'metadata.comic_id': query.comicId,
 					},
 				})
 			}
@@ -20,14 +23,15 @@ class Chapter {
 			if (query.chapterId) {
 				aggregationMatches.push({
 					$match: {
-						chapter_id: parseInt(query.chapterId),
+						'metadata.chapter_id': parseInt(query.chapterId),
 					},
 				})
 			}
+
 			if (query.chapterIds) {
 				aggregationMatches.push({
 					$match: {
-						chapter_id: {
+						'metadata.chapter_id': {
 							$in: query.chapterIds.map((id) => parseInt(id)),
 						},
 					},
@@ -45,9 +49,8 @@ class Chapter {
 					$lookup: {
 						from: 'access',
 						let: {
-							account_id: '$account_id',
-							comic_id: '$comic_id',
-							chapter_id: '$chapter_id',
+							chapter_comic_id: '$metadata.comic_id',
+							chapter_chapter_id: '$metadata.chapter_id',
 						},
 						pipeline: [
 							{
@@ -55,8 +58,8 @@ class Chapter {
 									$expr: {
 										$and: [
 											{ $eq: ['$account_id', query.authAccountId] },
-											{ $eq: ['$comic_id', '$$comic_id'] },
-											{ $eq: ['$chapter_id', '$$chapter_id'] },
+											{ $eq: ['$comic_id', '$$chapter_comic_id'] },
+											{ $eq: ['$chapter_id', '$$chapter_chapter_id'] },
 										],
 									},
 								},
@@ -120,15 +123,17 @@ class Chapter {
 		}
 	}
 
-	async addLanguage({ chapterId, comicId, lang }, { dbSession }) {
+	async addLanguage({ chapterId, comicId, lang, pageCount }, { dbSession }) {
+		const key = `lang.${lang}`
+
 		await this.chapterDb.findOneAndUpdate(
 			{
-				chapter_id: chapterId,
-				comic_id: comicId,
+				'metadata.chapter_id': chapterId,
+				'metadata.comic_id': comicId,
 			},
 			{
-				$addToSet: {
-					lang: lang,
+				$set: {
+					[key]: pageCount,
 				},
 			},
 			{
@@ -139,14 +144,16 @@ class Chapter {
 	}
 
 	async removeLanguage({ chapterId, comicId, lang }, { dbSession }) {
+		const key = `lang.${lang}`
+
 		await this.chapterDb.findOneAndUpdate(
 			{
-				chapter_id: chapterId,
-				comic_id: comicId,
+				'metadata.chapter_id': chapterId,
+				'metadata.comic_id': comicId,
 			},
 			{
-				$pull: {
-					lang: lang,
+				$unset: {
+					[key]: null,
 				},
 			},
 			{
@@ -157,7 +164,6 @@ class Chapter {
 	}
 
 	async create({
-		tokenType,
 		title,
 		price,
 		comicId,
@@ -166,49 +172,74 @@ class Chapter {
 		description,
 		blurhash,
 		authorIds,
-		pageCount,
 		collection,
 		subtitle,
 	}) {
 		try {
+			const metadata = {
+				comic_id: comicId,
+				chapter_id: chapterId,
+				description: description,
+				blurhash: blurhash,
+				creator_id: authorIds[0],
+				author_ids: authorIds,
+				collection: collection,
+				collection_id: slug(collection),
+				subtitle: subtitle,
+				issued_at: new Date().toISOString(),
+			}
+
 			// reference
 			const reference = await this.storage.upload(
-				JSON.stringify({
-					comic_id: comicId,
-					chapter_id: chapterId,
-					description: description,
-					blurhash: blurhash,
-					author_ids: authorIds,
-					page_count: pageCount,
-					collection: collection,
-					subtitle: subtitle,
-					issued_at: new Date().toISOString(),
-				}),
+				JSON.stringify(metadata),
 				'json',
 				true
 			)
 
-			const params = {
-				token_type: tokenType,
-				token_metadata: {
-					title: title,
-					media: media,
-					reference: reference,
-				},
-				author_id: authorIds[0],
-				price: price,
-			}
-			console.log(params)
+			pppp
 
-			// dev-1629375638187-90104949233722
-			await this.near.functionCall(
-				process.env.OWNER_ACCOUNT_ID,
-				process.env.CONTRACT_ACCOUNT_ID,
-				'nft_create_type',
-				params,
-				this.near.DEFAULT_GAS,
-				'0.1'
+			const tokenMetadata = {
+				title: title,
+				media: media,
+				reference: reference,
+			}
+
+			const params = {
+				token_metadata: tokenMetadata,
+				price: price,
+				royalty: null,
+			}
+
+			const rawResult = await AsyncRetry(
+				async () => {
+					return await this.near.functionCall(
+						process.env.OWNER_ACCOUNT_ID,
+						process.env.CONTRACT_ACCOUNT_ID,
+						'nft_create_series',
+						params,
+						this.near.DEFAULT_GAS,
+						'0.1'
+					)
+				},
+				{
+					retries: 100,
+					minTimeout: 500,
+					maxTimeout: 1000,
+				}
 			)
+
+			const result = JSON.parse(
+				Buffer.from(rawResult.status.SuccessValue, 'base64').toString()
+			)
+
+			await this.chapterDb.insertOne({
+				token_series_id: result.token_series_id,
+				metadata: {
+					...tokenMetadata,
+					...metadata,
+				},
+				price: price,
+			})
 
 			return params
 		} catch (err) {
