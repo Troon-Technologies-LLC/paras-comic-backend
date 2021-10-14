@@ -196,8 +196,6 @@ class Chapter {
 				true
 			)
 
-			pppp
-
 			const tokenMetadata = {
 				title: title,
 				media: media,
