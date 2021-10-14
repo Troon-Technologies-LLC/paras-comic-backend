@@ -208,6 +208,7 @@ class Chapter {
 				token_metadata: tokenMetadata,
 				price: price,
 				royalty: null,
+				creator_id: metadata.creator_id,
 			}
 
 			const rawResult = await AsyncRetry(
