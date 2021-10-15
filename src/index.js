@@ -150,7 +150,7 @@ const main = async () => {
 			const query = {
 				comicId: req.query.comic_id,
 				ownerId: req.query.owner_id,
-				tokenType: req.query.token_type,
+				tokenSeriesId: req.query.token_series_id,
 				tokenId: req.query.token_id,
 				category: req.query.category,
 			}
