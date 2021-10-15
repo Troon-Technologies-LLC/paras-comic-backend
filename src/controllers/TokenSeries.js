@@ -15,10 +15,10 @@ class TokenSeriesCtl {
 				})
 			}
 
-			if (query.tokenSeries) {
+			if (query.tokenSeriesId) {
 				aggregationMatches.push({
 					$match: {
-						token_series_id: query.tokenSeries,
+						token_series_id: query.tokenSeriesId,
 					},
 				})
 			}
