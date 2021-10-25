@@ -203,6 +203,11 @@ const main = async () => {
 		authenticate(near, 'testnet'),
 		async (req, res) => {
 			try {
+				const accountId = req.accountId
+				if (process.env.OWNER_ACCOUNT_ID !== accountId) {
+					throw new Error('Only administrator')
+				}
+
 				const result = await pageSvc.createBulk({
 					...req.body,
 					comic_id: req.params.comid_id,
@@ -311,6 +316,11 @@ const main = async () => {
 
 	server.post('/chapters', authenticate(near, 'testnet'), async (req, res) => {
 		try {
+			const accountId = req.accountId
+			if (process.env.OWNER_ACCOUNT_ID !== accountId) {
+				throw new Error('Only administrator')
+			}
+
 			const result = await chapterSvc.create(req.body)
 
 			res.json({
