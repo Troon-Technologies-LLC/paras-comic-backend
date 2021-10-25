@@ -19,7 +19,7 @@ const _hexToArr = (str) => {
 class Near {
 	constructor() {
 		this.ctx = null
-		this.config = getConfig(NODE_ENV)
+		this.config = getConfig(process.env.NODE_ENV)
 	}
 
 	async init() {
