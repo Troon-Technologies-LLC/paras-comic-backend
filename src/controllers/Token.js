@@ -54,6 +54,12 @@ class TokenCtl {
 				})
 			}
 
+			aggregationMatches.push({
+				$set: {
+					edition_id: {$toInt: '$edition_id'}
+				}
+			})
+
 			aggregationMatches = aggregationMatches.concat([
 				{
 					$project: {
