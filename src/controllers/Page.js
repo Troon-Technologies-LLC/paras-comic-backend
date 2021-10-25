@@ -61,17 +61,17 @@ class Page {
 			if (!pageData) {
 				throw new Error(`page not found`)
 			}
-			// const accessData = await this.accessDb.findOne({
-			// 	comic_id: comicId,
-			// 	chapter_id: parseInt(chapterId),
-			// 	account_id: authAccountId,
-			// })
-			// if (
-			// 	!accessData ||
-			// 	(accessData && accessData.access_tokens.length === 0)
-			// ) {
-			// 	throw new Error(`unauthorized`)
-			// }
+			const accessData = await this.accessDb.findOne({
+				comic_id: comicId,
+				chapter_id: parseInt(chapterId),
+				account_id: authAccountId,
+			})
+			if (
+				!accessData ||
+				(accessData && accessData.access_tokens.length === 0)
+			) {
+				throw new Error(`unauthorized`)
+			}
 
 			if (pageData.content.includes('://')) {
 				await this.cache.set(key, pageData.content)
