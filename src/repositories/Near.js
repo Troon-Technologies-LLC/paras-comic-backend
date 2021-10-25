@@ -16,13 +16,10 @@ const _hexToArr = (str) => {
 	}
 }
 
-const TESTNET_RPC = 'https://rpc.testnet.near.org'
-const MAINNET_RPC = 'https://rpc.mainnet.near.org'
-
 class Near {
 	constructor() {
 		this.ctx = null
-		this.config = getConfig('testnet')
+		this.config = getConfig(NODE_ENV)
 	}
 
 	async init() {
@@ -51,7 +48,7 @@ class Near {
 				throw new Error('unauthorized')
 			}
 			const b58pubKey = bs58.encode(Buffer.from(pubKey.toUpperCase(), 'hex'))
-			const response = await axios.post(TESTNET_RPC, {
+			const response = await axios.post(this.config.nodeUrl, {
 				jsonrpc: '2.0',
 				id: 'dontcare',
 				method: 'query',
