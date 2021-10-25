@@ -45,7 +45,7 @@ class ChapterSvc {
 				throw new Error('Chapter already exists')
 			}
 			const tokenType = `${comicId}-${chapterId}`
-			const price = input.price
+			const price = input.price || null
 			const title = `${getComics[0].title} Ch.${chapterId} : ${input.subtitle}`
 			const media = input.media
 			const blurhash = await encodeImageToBlurhash(

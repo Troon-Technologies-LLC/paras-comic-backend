@@ -13,7 +13,6 @@ module.exports = {
 	chapterCreate: yup.object().shape({
 		comic_id: yup.string().required(),
 		chapter_id: yup.string().required(),
-		price: yup.string().required(),
 		description: yup.string().required(),
 		author_ids: yup.array().required().of(yup.string()).min(1),
 		collection: yup.string().required(),
