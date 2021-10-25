@@ -5,7 +5,7 @@ class TokenSeriesCtl {
 
 	async find(query = {}, skip = 0, limit = 10) {
 		try {
-			const aggregationMatches = []
+			let aggregationMatches = []
 
 			if (query.comicId) {
 				aggregationMatches.push({
@@ -38,7 +38,7 @@ class TokenSeriesCtl {
 				})
 			}
 
-			const aggregationFull = aggregationMatches.concat([
+			aggregationMatches = aggregationMatches.concat([
 				{
 					$project: {
 						_id: 0,
@@ -57,7 +57,13 @@ class TokenSeriesCtl {
 				},
 			])
 
-			const rawResults = await this.tokenSeriesDb.aggregate(aggregationFull)
+			aggregationMatches.push({
+				$set: {
+					price:  {$toString: '$price'}
+				}
+			})
+
+			const rawResults = await this.tokenSeriesDb.aggregate(aggregationMatches)
 
 			const results = await rawResults.toArray()
 			return results
