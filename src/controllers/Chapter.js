@@ -23,7 +23,7 @@ class Chapter {
       if (query.chapterId) {
         aggregationMatches.push({
           $match: {
-            'metadata.chapter_id': parseInt(query.chapterId),
+            'metadata.chapter_id': query.chapterId,
           },
         })
       }
@@ -40,7 +40,7 @@ class Chapter {
         aggregationMatches.push({
           $match: {
             'metadata.chapter_id': {
-              $in: query.chapterIds.map((id) => parseInt(id)),
+              $in: query.chapterIds.map((id) => id),
             },
           },
         })

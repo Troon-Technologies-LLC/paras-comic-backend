@@ -36,7 +36,7 @@ class ChapterSvc {
       if (getComics.length === 0) {
         throw new Error('Comic not found')
       }
-      const chapterId = parseInt(input.chapter_id)
+      const chapterId = input.chapter_id
       const getChapters = await this.chapterCtl.find({
         comicId: comicId,
         chapterId: chapterId,
@@ -46,7 +46,7 @@ class ChapterSvc {
       }
       const tokenType = `${comicId}-${chapterId}`
       const price = input.price || null
-      let title = `${getComics[0].title} Ch.${chapterId}`
+      let title = `${getComics[0].title} Ch.${parseInt(chapterId)}`
       if (input.subtitle) {
         title = `${title} : ${input.subtitle} `
       }
