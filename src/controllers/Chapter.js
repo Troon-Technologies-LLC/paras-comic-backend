@@ -28,6 +28,14 @@ class Chapter {
         })
       }
 
+      if (query.tokenSeriesId) {
+        aggregationMatches.push({
+          $match: {
+            'token_series_id': query.tokenSeriesId,
+          },
+        })
+      }
+
       if (query.chapterIds) {
         aggregationMatches.push({
           $match: {
@@ -126,7 +134,7 @@ class Chapter {
   async addLanguage({ chapterId, comicId, lang, pageCount }, { dbSession }) {
     const key = `lang.${lang}`
 
-    await this.chapterDb.findOneAndUpdate(
+    await this.chapterDb.updateMany(
       {
         'metadata.chapter_id': chapterId,
         'metadata.comic_id': comicId,
@@ -146,7 +154,7 @@ class Chapter {
   async removeLanguage({ chapterId, comicId, lang }, { dbSession }) {
     const key = `lang.${lang}`
 
-    await this.chapterDb.findOneAndUpdate(
+    await this.chapterDb.deleteMany(
       {
         'metadata.chapter_id': chapterId,
         'metadata.comic_id': comicId,
