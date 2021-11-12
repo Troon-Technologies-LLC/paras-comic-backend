@@ -15,7 +15,7 @@ class TokenSeriesCtl {
       if (query.comicId) {
         aggregationMatches.push({
           $match: {
-            comic_id: query.comicId,
+            "metadata.comic_id": query.comicId,
           },
         })
       }

@@ -21,6 +21,7 @@ class TokenSeriesSvc {
 
   async create(input) {
     try {
+      console.log(input)
       await tokenSeriesCreate.validate(input, {
         abortEarly: true,
       })
@@ -35,6 +36,7 @@ class TokenSeriesSvc {
         price: input.price,
         media: input.media,
         copies: input.copies,
+        royalty: input.royalty,
         description: input.description,
         creatorId: input.creator_id,
         collection: input.collection,

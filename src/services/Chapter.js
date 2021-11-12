@@ -70,7 +70,8 @@ class ChapterSvc {
         authorIds: input.author_ids,
         collection: input.collection,
         subtitle: input.subtitle,
-        copies: input.copies
+        copies: input.copies,
+        royalty: input.royalty,
       })
 
       await this.dbSession.commitTransaction()
