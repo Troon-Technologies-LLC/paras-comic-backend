@@ -120,12 +120,26 @@ class Chapter {
         {
           $limit: limit,
         },
+        {
+          $lookup: {
+            from: 'token_series',
+            localField: 'token_series_id',
+            foreignField: 'token_series_id',
+            as: 'token_series'
+          },
+        },
       ])
 
       const rawResults = await this.chapterDb.aggregate(aggregationFull)
 
       const results = await rawResults.toArray()
-      return results
+      return results.map(result => {
+        if (result.token_series.length > 0 && result.token_series[0].is_non_mintable) {
+          result.price = null
+        }
+        delete result.token_series
+        return result
+      })
     } catch (err) {
       throw err
     }
