@@ -32,7 +32,6 @@ class TokenSeriesCtl {
         aggregationMatches.push({
           $match: {
             'metadata.chapter_id': { $exists: true },
-            'metadata.comic_id': { $exists: true },
           },
         })
       }
@@ -41,7 +40,6 @@ class TokenSeriesCtl {
         aggregationMatches.push({
           $match: {
             'metadata.chapter_id': { $exists: false },
-            'metadata.comic_id': { $exists: true },
           },
         })
       }
