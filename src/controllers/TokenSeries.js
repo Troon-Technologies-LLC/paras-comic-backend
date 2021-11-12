@@ -79,6 +79,7 @@ class TokenSeriesCtl {
   }
 
   async create({
+    comicId,
     title,
     price,
     media,
@@ -91,6 +92,7 @@ class TokenSeriesCtl {
   }) {
     try {
       const metadata = {
+        comic_id: comicId,
         description: description,
         blurhash: blurhash,
         creator_id: creatorId,

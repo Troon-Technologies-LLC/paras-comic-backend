@@ -30,6 +30,7 @@ class TokenSeriesSvc {
       )
 
       const result = await this.tokenSeriesCtl.create({
+        comicId: input.comic_id,
         title: input.title,
         price: input.price,
         media: input.media,

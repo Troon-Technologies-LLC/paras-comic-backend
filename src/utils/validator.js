@@ -22,6 +22,7 @@ module.exports = {
     royalty: yup.string().optional()
   }),
   tokenSeriesCreate: yup.object().shape({
+    comic_id: yup.string().required(),
     title: yup.string().required(),
     description: yup.string().required(),
     media: yup.string().required(),
