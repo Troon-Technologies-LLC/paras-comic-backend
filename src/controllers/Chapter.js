@@ -110,8 +110,7 @@ class Chapter {
         },
         {
           $sort: {
-            chapter_id: 1,
-            edition_id: 1,
+            "metadata.issued_at": 1
           },
         },
         {
