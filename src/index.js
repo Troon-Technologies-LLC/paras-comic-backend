@@ -60,7 +60,7 @@ const main = async () => {
   const chapterCtl = new ChapterCtl({ database, storage, near })
   const pageCtl = new PageCtl({ database, storage })
   const tokenCtl = new TokenCtl({ database })
-  const tokenSeriesCtl = new TokenSeriesCtl({ database })
+  const tokenSeriesCtl = new TokenSeriesCtl({ database, storage, near })
 
   const comicSvc = new ComicSvc({ comicCtl })
   const tokenSvc = new TokenSvc({ tokenCtl })
@@ -145,6 +145,28 @@ const main = async () => {
     }
   })
 
+  server.post('/token-series', authenticate(near, 'testnet'), async (req, res) => {
+    try {
+      const accountId = req.accountId
+      if (process.env.OWNER_ACCOUNT_ID !== accountId) {
+        throw new Error('Only administrator')
+      }
+
+      const result = await tokenSeriesSvc.create(req.body)
+
+      res.json({
+        status: 1,
+        data: result,
+      })
+    } catch (err) {
+      console.log(err)
+      res.status(400).json({
+        status: 0,
+        message: err.message || err,
+      })
+    }
+  })
+
   server.get('/tokens', async (req, res) => {
     try {
       const query = {
@@ -173,12 +195,11 @@ const main = async () => {
   })
 
   server.get('/chapters', async (req, res) => {
-    const { comic_id, chapter_id, chapter_ids } = req.query
+    const { comic_id, chapter_id, chapter_ids, token_series_id } = req.query
     const accountId = await near.authSignature(
       req.headers.authorization,
       'testnet'
     )
-
     try {
       const query = {
         comicId: comic_id,
