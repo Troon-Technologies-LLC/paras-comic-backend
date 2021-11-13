@@ -35,482 +35,490 @@ const server = express()
 // })
 
 const main = async () => {
-	// if (process.env.NODE_ENV === 'mainnet') {
-	// 	server.set('trust proxy', 1)
-	// 	server.use(speedLimiter)
-	// }
-	server.use(cors())
-	server.use(bodyParser.urlencoded({ extended: true }))
-	server.use(bodyParser.json())
+  // if (process.env.NODE_ENV === 'mainnet') {
+  // 	server.set('trust proxy', 1)
+  // 	server.use(speedLimiter)
+  // }
+  server.use(cors())
+  server.use(bodyParser.urlencoded({ extended: true }))
+  server.use(bodyParser.json())
 
-	const database = new Database()
-	await database.init()
+  const database = new Database()
+  await database.init()
 
-	const dbSession = database.client.startSession()
+  const dbSession = database.client.startSession()
 
-	const storage = new Storage(database)
-	await storage.init()
+  const storage = new Storage(database)
+  await storage.init()
 
-	const near = new Near()
-	await near.init()
+  const near = new Near()
+  await near.init()
 
-	const comicCtl = new ComicCtl({ database })
-	const commentCtl = new CommentCtl({ database })
-	const likeCtl = new LikeCtl({ database })
-	const chapterCtl = new ChapterCtl({ database, storage, near })
-	const pageCtl = new PageCtl({ database, storage })
-	const tokenCtl = new TokenCtl({ database })
-	const tokenSeriesCtl = new TokenSeriesCtl({ database })
+  const comicCtl = new ComicCtl({ database })
+  const commentCtl = new CommentCtl({ database })
+  const likeCtl = new LikeCtl({ database })
+  const chapterCtl = new ChapterCtl({ database, storage, near })
+  const pageCtl = new PageCtl({ database, storage })
+  const tokenCtl = new TokenCtl({ database })
+  const tokenSeriesCtl = new TokenSeriesCtl({ database })
 
-	const comicSvc = new ComicSvc({ comicCtl })
-	const tokenSvc = new TokenSvc({ tokenCtl })
-	const tokenSeriesSvc = new TokenSeriesSvc({ tokenSeriesCtl })
-	const commentSvc = new CommentSvc({ commentCtl, likeCtl }, { dbSession })
-	const chapterSvc = new ChapterSvc(
-		{ chapterCtl, comicCtl, pageCtl },
-		{ dbSession }
-	)
-	const pageSvc = new PageSvc({ comicCtl, chapterCtl, pageCtl }, { dbSession })
+  const comicSvc = new ComicSvc({ comicCtl })
+  const tokenSvc = new TokenSvc({ tokenCtl })
+  const tokenSeriesSvc = new TokenSeriesSvc({ tokenSeriesCtl })
+  const commentSvc = new CommentSvc({ commentCtl, likeCtl }, { dbSession })
+  const chapterSvc = new ChapterSvc(
+    { chapterCtl, comicCtl, pageCtl },
+    { dbSession }
+  )
+  const pageSvc = new PageSvc({ comicCtl, chapterCtl, pageCtl }, { dbSession })
 
-	server.get('/', async (req, res) => {
-		res.json({
-			status: 1,
-		})
-	})
+  server.get('/', async (req, res) => {
+    res.json({
+      status: 1,
+    })
+  })
 
-	server.get('/storage-cache/:hash', async (req, res) => {
-		try {
-			const result = await storage.get(req.params.hash)
-			const resultJson = JSON.parse(result[0].content.toString('utf8'))
-			res.json(resultJson)
-		} catch (err) {
-			console.log(err)
-			res.status(400).json({
-				status: 0,
-				message: err.message || err,
-			})
-		}
-	})
+  server.get('/storage-cache/:hash', async (req, res) => {
+    try {
+      const result = await storage.get(req.params.hash)
+      const resultJson = JSON.parse(result[0].content.toString('utf8'))
+      res.json(resultJson)
+    } catch (err) {
+      console.log(err)
+      res.status(400).json({
+        status: 0,
+        message: err.message || err,
+      })
+    }
+  })
 
-	server.get('/comics', async (req, res) => {
-		try {
-			const query = {
-				comicId: req.query.comic_id,
-				ownerId: req.query.owner_id,
-			}
+  server.get('/comics', async (req, res) => {
+    try {
+      const query = {
+        comicId: req.query.comic_id,
+        ownerId: req.query.owner_id,
+      }
 
-			const skip = req.query.__skip ? parseInt(req.query.__skip) : 0
-			const limit = req.query.__limit
-				? Math.min(parseInt(req.query.__limit), 10)
-				: 10
+      const skip = req.query.__skip ? parseInt(req.query.__skip) : 0
+      const limit = req.query.__limit
+        ? Math.min(parseInt(req.query.__limit), 10)
+        : 10
 
-			const results = await comicSvc.find(query, skip, limit)
+      const results = await comicSvc.find(query, skip, limit)
 
-			return res.json({
-				status: 1,
-				data: results,
-			})
-		} catch (err) {
-			return res.status(400).json({
-				status: 0,
-				message: err.message,
-			})
-		}
-	})
+      return res.json({
+        status: 1,
+        data: results,
+      })
+    } catch (err) {
+      return res.status(400).json({
+        status: 0,
+        message: err.message,
+      })
+    }
+  })
 
-	server.get('/token-series', async (req, res) => {
-		try {
-			const query = {
-				comicId: req.query.comic_id,
-				tokenSeriesId: req.query.token_series_id,
-				category: req.query.category,
-			}
+  server.get('/token-series', async (req, res) => {
+    try {
+      const query = {
+        comicId: req.query.comic_id,
+        tokenSeriesId: req.query.token_series_id,
+        category: req.query.category,
+      }
 
-			const skip = req.query.__skip ? parseInt(req.query.__skip) : 0
-			const limit = req.query.__limit
-				? Math.min(parseInt(req.query.__limit), 10)
-				: 10
+      const skip = req.query.__skip ? parseInt(req.query.__skip) : 0
+      const limit = req.query.__limit
+        ? Math.min(parseInt(req.query.__limit), 10)
+        : 10
 
-			const results = await tokenSeriesSvc.find(query, skip, limit)
+      const results = await tokenSeriesSvc.find(query, skip, limit)
 
-			return res.json({
-				status: 1,
-				data: results,
-			})
-		} catch (err) {
-			return res.status(400).json({
-				status: 0,
-				message: err.message,
-			})
-		}
-	})
+      return res.json({
+        status: 1,
+        data: results,
+      })
+    } catch (err) {
+      return res.status(400).json({
+        status: 0,
+        message: err.message,
+      })
+    }
+  })
 
-	server.get('/tokens', async (req, res) => {
-		try {
-			const query = {
-				comicId: req.query.comic_id,
-				ownerId: req.query.owner_id,
-				tokenSeriesId: req.query.token_series_id,
-				tokenId: req.query.token_id,
-				category: req.query.category,
-			}
+  server.get('/tokens', async (req, res) => {
+    try {
+      const query = {
+        comicId: req.query.comic_id,
+        ownerId: req.query.owner_id,
+        tokenSeriesId: req.query.token_series_id,
+        tokenId: req.query.token_id,
+        category: req.query.category,
+      }
 
-			const skip = req.query.__skip ? parseInt(req.query.__skip) : 0
-			const limit = req.query.__limit ? parseInt(req.query.__limit) : 30
+      const skip = req.query.__skip ? parseInt(req.query.__skip) : 0
+      const limit = req.query.__limit ? parseInt(req.query.__limit) : 30
 
-			const results = await tokenSvc.find(query, skip, limit)
+      const results = await tokenSvc.find(query, skip, limit)
 
-			return res.json({
-				status: 1,
-				data: results,
-			})
-		} catch (err) {
-			return res.status(400).json({
-				status: 0,
-				message: err.message,
-			})
-		}
-	})
+      return res.json({
+        status: 1,
+        data: results,
+      })
+    } catch (err) {
+      return res.status(400).json({
+        status: 0,
+        message: err.message,
+      })
+    }
+  })
 
-	server.get('/chapters', async (req, res) => {
-		const { comic_id, chapter_id, chapter_ids } = req.query
-		const accountId = await near.authSignature(
-			req.headers.authorization,
-			'testnet'
-		)
-		try {
-			const results = await chapterSvc.find({
-				comicId: comic_id,
-				chapterId: chapter_id,
-				chapterIds: chapter_ids,
-				authAccountId: accountId,
-			})
+  server.get('/chapters', async (req, res) => {
+    const { comic_id, chapter_id, chapter_ids } = req.query
+    const accountId = await near.authSignature(
+      req.headers.authorization,
+      'testnet'
+    )
 
-			return res.json({
-				status: 1,
-				data: results,
-			})
-		} catch (err) {
-			return res.status(400).json({
-				status: 0,
-				message: err.message,
-			})
-		}
-	})
+    try {
+      const query = {
+        comicId: comic_id,
+        chapterId: chapter_id,
+        chapterIds: chapter_ids,
+        authAccountId: accountId,
+      }
 
-	server.post(
-		'/pages/:comid_id/:chapter_id',
-		authenticate(near, 'testnet'),
-		async (req, res) => {
-			try {
-				const accountId = req.accountId
-				if (process.env.OWNER_ACCOUNT_ID !== accountId) {
-					throw new Error('Only administrator')
-				}
+      const skip = req.query.__skip ? parseInt(req.query.__skip) : 0
+      const limit = req.query.__limit
+        ? Math.min(parseInt(req.query.__limit), 10)
+        : 10
 
-				const result = await pageSvc.createBulk({
-					...req.body,
-					comic_id: req.params.comid_id,
-					chapter_id: req.params.chapter_id,
-				})
+      const results = await chapterSvc.find(query, skip, limit)
 
-				res.json({
-					status: 1,
-					data: result,
-				})
-			} catch (err) {
-				console.log(err)
-				res.status(400).json({
-					status: 0,
-					message: err.message || err,
-				})
-			}
-		}
-	)
+      return res.json({
+        status: 1,
+        data: results,
+      })
+    } catch (err) {
+      return res.status(400).json({
+        status: 0,
+        message: err.message,
+      })
+    }
+  })
 
-	server.get(
-		'/pages/:comic_id/:chapter_id/:page_id',
-		authenticate(near),
-		async (req, res) => {
-			const accountId = req.accountId
-			try {
-				const content = await pageSvc.getContent({
-					comicId: req.params.comic_id,
-					chapterId: req.params.chapter_id,
-					pageId: req.params.page_id,
-					lang: null,
-					authAccountId: accountId,
-				})
-				res.set('Cache-Control', 'private, max-age=300')
+  server.post(
+    '/pages/:comid_id/:chapter_id',
+    authenticate(near, 'testnet'),
+    async (req, res) => {
+      try {
+        const accountId = req.accountId
+        if (process.env.OWNER_ACCOUNT_ID !== accountId) {
+          throw new Error('Only administrator')
+        }
 
-				return axios({
-					method: 'get',
-					url: content,
-					responseType: 'stream',
-				}).then(function (response) {
-					response.data.pipe(res)
-				})
-			} catch (err) {
-				return res.status(400).json({
-					status: 0,
-					message: err.message,
-				})
-			}
-		}
-	)
+        const result = await pageSvc.createBulk({
+          ...req.body,
+          comic_id: req.params.comid_id,
+          chapter_id: req.params.chapter_id,
+        })
 
-	server.get(
-		'/pages/:comic_id/:chapter_id/:page_id/:lang',
-		authenticate(near),
-		async (req, res) => {
-			const accountId = req.accountId
-			try {
-				const content = await pageSvc.getContent({
-					comicId: req.params.comic_id,
-					chapterId: req.params.chapter_id,
-					pageId: req.params.page_id,
-					lang: req.params.lang,
-					authAccountId: accountId,
-				})
-				res.set('Cache-Control', 'private, max-age=300')
+        res.json({
+          status: 1,
+          data: result,
+        })
+      } catch (err) {
+        console.log(err)
+        res.status(400).json({
+          status: 0,
+          message: err.message || err,
+        })
+      }
+    }
+  )
 
-				return axios({
-					method: 'get',
-					url: content,
-					responseType: 'stream',
-				}).then(function (response) {
-					response.data.pipe(res)
-				})
-			} catch (err) {
-				return res.status(400).json({
-					status: 0,
-					message: err.message,
-				})
-			}
-		}
-	)
+  server.get(
+    '/pages/:comic_id/:chapter_id/:page_id',
+    authenticate(near),
+    async (req, res) => {
+      const accountId = req.accountId
+      try {
+        const content = await pageSvc.getContent({
+          comicId: req.params.comic_id,
+          chapterId: req.params.chapter_id,
+          pageId: req.params.page_id,
+          lang: null,
+          authAccountId: accountId,
+        })
+        res.set('Cache-Control', 'private, max-age=300')
 
-	server.post(
-		'/upload/single',
-		authenticate(near, 'testnet'),
-		async (req, res) => {
-			try {
-				await multer.bulk(req, res)
-				console.log(req.files[0])
+        return axios({
+          method: 'get',
+          url: content,
+          responseType: 'stream',
+        }).then(function (response) {
+          response.data.pipe(res)
+        })
+      } catch (err) {
+        return res.status(400).json({
+          status: 0,
+          message: err.message,
+        })
+      }
+    }
+  )
 
-				const result = await storage.upload(req.files[0], 'file')
+  server.get(
+    '/pages/:comic_id/:chapter_id/:page_id/:lang',
+    authenticate(near),
+    async (req, res) => {
+      const accountId = req.accountId
+      try {
+        const content = await pageSvc.getContent({
+          comicId: req.params.comic_id,
+          chapterId: req.params.chapter_id,
+          pageId: req.params.page_id,
+          lang: req.params.lang,
+          authAccountId: accountId,
+        })
+        res.set('Cache-Control', 'private, max-age=300')
 
-				res.json({
-					status: 1,
-					data: result,
-				})
-			} catch (err) {
-				console.log(err)
-				res.status(400).json({
-					status: 0,
-					message: err.message || err,
-				})
-			}
-		}
-	)
+        return axios({
+          method: 'get',
+          url: content,
+          responseType: 'stream',
+        }).then(function (response) {
+          response.data.pipe(res)
+        })
+      } catch (err) {
+        return res.status(400).json({
+          status: 0,
+          message: err.message,
+        })
+      }
+    }
+  )
 
-	server.post('/chapters', authenticate(near, 'testnet'), async (req, res) => {
-		try {
-			const accountId = req.accountId
-			if (process.env.OWNER_ACCOUNT_ID !== accountId) {
-				throw new Error('Only administrator')
-			}
+  server.post(
+    '/upload/single',
+    authenticate(near, 'testnet'),
+    async (req, res) => {
+      try {
+        await multer.bulk(req, res)
+        console.log(req.files[0])
 
-			const result = await chapterSvc.create(req.body)
+        const result = await storage.upload(req.files[0], 'file')
 
-			res.json({
-				status: 1,
-				data: result,
-			})
-		} catch (err) {
-			console.log(err)
-			res.status(400).json({
-				status: 0,
-				message: err.message || err,
-			})
-		}
-	})
+        res.json({
+          status: 1,
+          data: result,
+        })
+      } catch (err) {
+        console.log(err)
+        res.status(400).json({
+          status: 0,
+          message: err.message || err,
+        })
+      }
+    }
+  )
 
-	server.post('/comments', authenticate(near, 'testnet'), async (req, res) => {
-		try {
-			const params = {
-				accountId: req.accountId,
-				comicId: req.body.comic_id,
-				chapterId: req.body.chapter_id,
-				body: req.body.body,
-			}
-			const result = await commentSvc.create(params)
-			return res.json({
-				status: 1,
-				data: result,
-			})
-		} catch (err) {
-			return res.status(400).json({
-				status: 0,
-				message: err.message,
-			})
-		}
-	})
+  server.post('/chapters', authenticate(near, 'testnet'), async (req, res) => {
+    try {
+      const accountId = req.accountId
+      if (process.env.OWNER_ACCOUNT_ID !== accountId) {
+        throw new Error('Only administrator')
+      }
 
-	server.get('/comments', async (req, res) => {
-		const accountId = await near.authSignature(
-			req.headers.authorization,
-			'testnet'
-		)
-		try {
-			const query = {
-				comicId: req.query.comic_id,
-				chapterId: req.query.chapter_id,
-				authAccountId: accountId,
-			}
+      const result = await chapterSvc.create(req.body)
 
-			const skip = req.query.__skip ? parseInt(req.query.__skip) : 0
-			const limit = req.query.__limit
-				? Math.min(parseInt(req.query.__limit), 10)
-				: 10
+      res.json({
+        status: 1,
+        data: result,
+      })
+    } catch (err) {
+      console.log(err)
+      res.status(400).json({
+        status: 0,
+        message: err.message || err,
+      })
+    }
+  })
 
-			const results = await commentSvc.find(query, skip, limit)
+  server.post('/comments', authenticate(near, 'testnet'), async (req, res) => {
+    try {
+      const params = {
+        accountId: req.accountId,
+        comicId: req.body.comic_id,
+        chapterId: req.body.chapter_id,
+        body: req.body.body,
+      }
+      const result = await commentSvc.create(params)
+      return res.json({
+        status: 1,
+        data: result,
+      })
+    } catch (err) {
+      return res.status(400).json({
+        status: 0,
+        message: err.message,
+      })
+    }
+  })
 
-			return res.json({
-				status: 1,
-				data: results,
-			})
-		} catch (err) {
-			return res.status(400).json({
-				status: 0,
-				message: err.message,
-			})
-		}
-	})
+  server.get('/comments', async (req, res) => {
+    const accountId = await near.authSignature(
+      req.headers.authorization,
+      'testnet'
+    )
+    try {
+      const query = {
+        comicId: req.query.comic_id,
+        chapterId: req.query.chapter_id,
+        authAccountId: accountId,
+      }
 
-	server.put(
-		'/comments/likes',
-		authenticate(near, 'testnet'),
-		async (req, res) => {
-			try {
-				const accountId = req.accountId
-				const params = {
-					accountId: accountId,
-					commentId: req.body.comment_id,
-				}
-				const result = await commentSvc.likes(params)
-				return res.json({
-					status: 1,
-					data: result,
-				})
-			} catch (err) {
-				return res.status(400).json({
-					status: 0,
-					message: err.message,
-				})
-			}
-		}
-	)
+      const skip = req.query.__skip ? parseInt(req.query.__skip) : 0
+      const limit = req.query.__limit
+        ? Math.min(parseInt(req.query.__limit), 10)
+        : 10
 
-	server.put(
-		'/comments/unlikes',
-		authenticate(near, 'testnet'),
-		async (req, res) => {
-			try {
-				const accountId = req.accountId
-				const params = {
-					accountId: accountId,
-					commentId: req.body.comment_id,
-				}
-				const result = await commentSvc.unlikes(params)
-				return res.json({
-					status: 1,
-					data: result,
-				})
-			} catch (err) {
-				return res.status(400).json({
-					status: 0,
-					message: err.message,
-				})
-			}
-		}
-	)
+      const results = await commentSvc.find(query, skip, limit)
 
-	server.put(
-		'/comments/dislikes',
-		authenticate(near, 'testnet'),
-		async (req, res) => {
-			try {
-				const accountId = req.accountId
-				const params = {
-					accountId: accountId,
-					commentId: req.body.comment_id,
-				}
-				const result = await commentSvc.dislikes(params)
-				return res.json({
-					status: 1,
-					data: result,
-				})
-			} catch (err) {
-				return res.status(400).json({
-					status: 0,
-					message: err.message,
-				})
-			}
-		}
-	)
+      return res.json({
+        status: 1,
+        data: results,
+      })
+    } catch (err) {
+      return res.status(400).json({
+        status: 0,
+        message: err.message,
+      })
+    }
+  })
 
-	server.put(
-		'/comments/undislikes',
-		authenticate(near, 'testnet'),
-		async (req, res) => {
-			try {
-				const accountId = req.accountId
-				const params = {
-					accountId: accountId,
-					commentId: req.body.comment_id,
-				}
-				const result = await commentSvc.undislikes(params)
-				return res.json({
-					status: 1,
-					data: result,
-				})
-			} catch (err) {
-				return res.status(400).json({
-					status: 0,
-					message: err.message,
-				})
-			}
-		}
-	)
+  server.put(
+    '/comments/likes',
+    authenticate(near, 'testnet'),
+    async (req, res) => {
+      try {
+        const accountId = req.accountId
+        const params = {
+          accountId: accountId,
+          commentId: req.body.comment_id,
+        }
+        const result = await commentSvc.likes(params)
+        return res.json({
+          status: 1,
+          data: result,
+        })
+      } catch (err) {
+        return res.status(400).json({
+          status: 0,
+          message: err.message,
+        })
+      }
+    }
+  )
 
-	server.delete(
-		'/comments/:commentId',
-		authenticate(near, 'testnet'),
-		async (req, res) => {
-			try {
-				const accountId = req.accountId
-				const params = {
-					accountId: accountId,
-					commentId: req.params.commentId,
-				}
-				const result = await commentSvc.delete(params)
-				return res.json({
-					status: 1,
-					data: result,
-				})
-			} catch (err) {
-				return res.status(400).json({
-					status: 0,
-					message: err.message,
-				})
-			}
-		}
-	)
+  server.put(
+    '/comments/unlikes',
+    authenticate(near, 'testnet'),
+    async (req, res) => {
+      try {
+        const accountId = req.accountId
+        const params = {
+          accountId: accountId,
+          commentId: req.body.comment_id,
+        }
+        const result = await commentSvc.unlikes(params)
+        return res.json({
+          status: 1,
+          data: result,
+        })
+      } catch (err) {
+        return res.status(400).json({
+          status: 0,
+          message: err.message,
+        })
+      }
+    }
+  )
 
-	server.listen(PORT, () => {
-		console.log(`Comic Paras: Backend running on PORT ${PORT}`)
-	})
+  server.put(
+    '/comments/dislikes',
+    authenticate(near, 'testnet'),
+    async (req, res) => {
+      try {
+        const accountId = req.accountId
+        const params = {
+          accountId: accountId,
+          commentId: req.body.comment_id,
+        }
+        const result = await commentSvc.dislikes(params)
+        return res.json({
+          status: 1,
+          data: result,
+        })
+      } catch (err) {
+        return res.status(400).json({
+          status: 0,
+          message: err.message,
+        })
+      }
+    }
+  )
+
+  server.put(
+    '/comments/undislikes',
+    authenticate(near, 'testnet'),
+    async (req, res) => {
+      try {
+        const accountId = req.accountId
+        const params = {
+          accountId: accountId,
+          commentId: req.body.comment_id,
+        }
+        const result = await commentSvc.undislikes(params)
+        return res.json({
+          status: 1,
+          data: result,
+        })
+      } catch (err) {
+        return res.status(400).json({
+          status: 0,
+          message: err.message,
+        })
+      }
+    }
+  )
+
+  server.delete(
+    '/comments/:commentId',
+    authenticate(near, 'testnet'),
+    async (req, res) => {
+      try {
+        const accountId = req.accountId
+        const params = {
+          accountId: accountId,
+          commentId: req.params.commentId,
+        }
+        const result = await commentSvc.delete(params)
+        return res.json({
+          status: 1,
+          data: result,
+        })
+      } catch (err) {
+        return res.status(400).json({
+          status: 0,
+          message: err.message,
+        })
+      }
+    }
+  )
+
+  server.listen(PORT, () => {
+    console.log(`Comic Paras: Backend running on PORT ${PORT}`)
+  })
 }
 
 module.exports = main
