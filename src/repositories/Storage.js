@@ -111,7 +111,7 @@ class Storage {
 		const url =
 			cid.version === 0
 				? `https://ipfs-gateway.paras.id/ipfs/${path}`
-				: `https://ipfs.fleek.co/ipfs/${path}`
+				: `https://ipfs.io/ipfs/${path}`
 
 		return url
 	}
