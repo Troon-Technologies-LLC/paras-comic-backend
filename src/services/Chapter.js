@@ -52,7 +52,7 @@ class ChapterSvc {
       }
       const media = input.media
       const blurhash = await encodeImageToBlurhash(
-        `https://ipfs.fleek.co/ipfs/${media}`
+        `https://ipfs.io/ipfs/${media}`
       )
 
       await this.dbSession.startTransaction()
